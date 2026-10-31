@@ -16,8 +16,8 @@
         "zh": "DSH 会话工作台"
       },
       "description": {
-        "en": "Compact session sidebar with project grouping, Working, Needs attention, reversible Settle, and an original-layout switch. macOS Desktop verified; Chinese UI.",
-        "zh": "紧凑会话侧栏、项目分组、工作中、需要处理、可恢复 Settle 和原布局切换；已验证 macOS 桌面版，界面为中文。"
+        "en": "Compact session sidebar with project groups, Working for all unsettled chats, reversible Settle, and an original-layout switch. macOS Desktop verified; Chinese UI.",
+        "zh": "紧凑会话侧栏、项目分组、工作中 / 已整理两栏、可恢复 Settle 和原布局切换；已验证 macOS 桌面版，界面为中文。"
       },
       "author": "Tracest",
       "homepage": "https://github.com/Tracest/dsh-session-inbox",
@@ -26,6 +26,18 @@
       },
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxODAiIHJ4PSI0MCIgZmlsbD0iIzE3MjAzMyIvPgogIDxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjExNiIgaGVpZ2h0PSIxMTYiIHJ4PSIxNyIgc3Ryb2tlPSIjRDlFNEZBIiBzdHJva2Utd2lkdGg9IjgiLz4KICA8cGF0aCBkPSJNNzAgMzZWMTQ0IiBzdHJva2U9IiNEOUU0RkEiIHN0cm9rZS13aWR0aD0iNyIvPgogIDxwYXRoIGQ9Ik00NSA1N0g1N000NSA3OEg1N000NSA5OUg1NyIgc3Ryb2tlPSIjQTVCRkYyIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik04OSA5M0wxMDQgMTA4TDEzMCA3NiIgc3Ryb2tlPSIjODZFM0MxIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K",
       "versions": [
+        {
+          "version": "0.3.1",
+          "publishTimestamp": 1793427935,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Tracest/dsh-session-inbox",
+            "commit": "2ed6eda2516ba6bc893f3a4466a1b956c9d56d05"
+          },
+          "engines": {
+            "dsh": "0.2.1-rc.5"
+          }
+        },
         {
           "version": "0.3.0",
           "publishTimestamp": 1793416049,
