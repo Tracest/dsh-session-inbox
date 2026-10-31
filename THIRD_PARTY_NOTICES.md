@@ -12,9 +12,10 @@ license are retained in [vendor/LICENSE.deepseek](vendor/LICENSE.deepseek).
 - The sidebar artifact supplies its version-specific CSS class map at build
   time. The official sidebar remains active at runtime.
 
-T3 Code's compact header, utility footer, and Working/Settled organization were
-design references. No T3 Code implementation is included in this package.
-<https://github.com/pingdotgg/t3code/tree/v0.1.5/apps/web/src/components/sidebar>
+T3 Code's compact header and Working/Settled organization were design references.
+This workbench places its utility entries above the list. No T3 Code implementation
+is included in this package.
+<https://github.com/pingdotgg/t3code/blob/v0.1.5/apps/web/src/components/Sidebar.tsx>
 
 DSH and DeepSeek names identify compatibility with the upstream application.
 This is an independent community plugin and is not an official DeepSeek product.

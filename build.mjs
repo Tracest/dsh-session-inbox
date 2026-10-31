@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import vm from 'node:vm';
 
 const read = path => fs.readFileSync(new URL(path, import.meta.url), 'utf8');
+const version = JSON.parse(read('./package.json')).version;
 function replaceOnce(source, marker, replacement) {
   if (source.split(marker).length !== 2) throw new Error(`Unsupported DSH client: ambiguous or missing hook ${marker}`);
   return source.replace(marker, replacement);
@@ -44,11 +45,13 @@ for (const key of ['root', 'topStrip', 'logoRow', 'brandIdentity', 'brandMark', 
 }
 
 const compiled = `window.__ModuleLoader__.load({id:'dsh-session-inbox',factory:(require)=>{
+const INBOX_PLUGIN_VERSION=${JSON.stringify(version)};
+const INBOX_CSS=${JSON.stringify(css)};
 ${read('./src/model.mjs').replace(/^export /gm, '')}
+${read('./src/backup.mjs').replace(/^import .*?;\n/gm, '').replace(/^export /gm, '')}
 ${read('./src/shared.mjs')}
 ${read('./src/shell.mjs')}
 const workspaceModule=(()=>{${workspace}})();
-const inboxStyle=document.createElement('style');inboxStyle.dataset.plugin='dsh-session-inbox';inboxStyle.textContent=${JSON.stringify(css)};document.head.appendChild(inboxStyle);
 return workspaceModule;
 }});\n`;
 new vm.Script(compiled);
@@ -56,7 +59,7 @@ fs.mkdirSync(new URL('./lib', import.meta.url), { recursive: true });
 fs.writeFileSync(new URL('./lib/client.js', import.meta.url), compiled);
 fs.writeFileSync(new URL('./lib/index.js', import.meta.url), '// Browser-only UI replacement.\nexport function apply() {}\n');
 fs.writeFileSync(new URL('./lib/build-info.json', import.meta.url), JSON.stringify({
-  version: '0.3.2', dshVersion: '0.2.1-rc.5',
+  version, dshVersion: '0.2.1-rc.5',
   upstreamSha256: Object.fromEntries(Object.entries(originals).map(([key, source]) => [key, crypto.createHash('sha256').update(source).digest('hex')])),
 }, null, 2) + '\n');
-console.log('Built DSH session workbench 0.3.2 with native workspace navigation and scoped sidebar styles.');
+console.log(`Built DSH session workbench ${version} with native workspace navigation and scoped sidebar styles.`);

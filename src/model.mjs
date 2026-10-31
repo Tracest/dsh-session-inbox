@@ -2,7 +2,7 @@
 export const INBOX_STORAGE_KEY = 'dsh-session-inbox:state:v1';
 
 export function inboxEmptyState() {
-  return { version: 1, mode: 'inbox', groupByProject: false, includeArchived: true, settled: {}, collapsed: { settled: true } };
+  return { version: 1, mode: 'inbox', groupByProject: false, includeArchived: true, settled: {}, unread: {}, collapsed: { settled: true } };
 }
 
 /** Reject corrupt/future records instead of silently overwriting the user's metadata. */
@@ -27,7 +27,13 @@ export function inboxParseState(raw) {
   if (value.includeArchived !== undefined && typeof value.includeArchived !== 'boolean') {
     throw new Error('归档显示选项无法读取。');
   }
-  return { ...value, includeArchived: value.includeArchived ?? true };
+  if (value.unread !== undefined) {
+    if (!value.unread || typeof value.unread !== 'object' || Array.isArray(value.unread)) throw new Error('未读状态无法读取。');
+    for (const [id, at] of Object.entries(value.unread)) {
+      if (['__proto__', 'constructor', 'prototype'].includes(id) || !Number.isFinite(at) || at < 0) throw new Error('未读状态无法读取。');
+    }
+  }
+  return { ...value, unread: value.unread ?? {}, includeArchived: value.includeArchived ?? true };
 }
 
 export function inboxActivityStamp(session) {
@@ -68,7 +74,8 @@ export function inboxCollapsed(state, category, projectId) {
 export function inboxPartition(rows, state, returnedAt = {}) {
   const groups = { active: [], working: [], settled: [] };
   for (const row of rows) groups[inboxCategory(row, state)].push(row);
-  groups.active.sort((a, b) => Number(b.pinned) - Number(a.pinned)
+  groups.active.sort((a, b) => Number(Boolean(b.pending)) - Number(Boolean(a.pending))
+    || Number(b.pinned) - Number(a.pinned)
     || Math.max(b.updatedAt, returnedAt[b.id] ?? 0) - Math.max(a.updatedAt, returnedAt[a.id] ?? 0));
   return groups;
 }
@@ -83,7 +90,19 @@ export function inboxHasNewActivity(row, mark) {
 
 export function inboxSettle(state, row, now = Date.now()) {
   if (row.running || row.pending || row.blank) return state;
-  return { ...state, settled: { ...state.settled, [row.id]: { stamp: row.stamp, at: now } } };
+  return { ...inboxAcknowledge(state, row.id), settled: { ...state.settled, [row.id]: { stamp: row.stamp, at: now } } };
+}
+
+/** DSH retains the main chat behind global panels. Record completions that were not actually visible. */
+export function inboxComplete(state, id, now = Date.now()) {
+  return { ...state, unread: { ...state.unread, [id]: now } };
+}
+
+export function inboxAcknowledge(state, id) {
+  if (!Object.hasOwn(state.unread ?? {}, id)) return state;
+  const unread = { ...state.unread };
+  delete unread[id];
+  return { ...state, unread };
 }
 
 export function inboxRestore(state, id) {
@@ -96,6 +115,7 @@ export function inboxRestore(state, id) {
 export function inboxReconcile(state, rows) {
   let next = state;
   for (const row of rows) {
+    if (row.running) next = inboxAcknowledge(next, row.id);
     const mark = next.settled[row.id];
     if (mark && (row.running || row.pending || inboxHasNewActivity(row, mark))) {
       next = inboxRestore(next, row.id);
@@ -120,13 +140,13 @@ export function inboxRows(list, workspaces, statuses, archivedIds, pinnedIds, pr
     if (!session || session.origin === 'subagent' || (session.blank && !preservedBlanks.has(id))) return [];
     const status = statuses.get(id);
     const children = list.projectionsBySession?.[id]?.values?.subagentCatalog ?? [];
-    const childRunning = children.some(child => (statuses.get(child.id)?.running ?? list.byId[child.id]?.running) === true);
+    const runningSubagentCount = children.filter(child => (statuses.get(child.id)?.running ?? list.byId[child.id]?.running) === true).length;
     const project = projects.get(id);
     return [{
       id, title: session.blank ? '空会话' : (session.title?.trim() || '未命名会话'),
       stamp: inboxActivityStamp(session), updatedAt: Number(session.updatedAt) || 0,
       blank: session.blank === true, archived: archived.has(id), pinned: pinned.has(id),
-      running: (status?.running ?? session.running) === true || childRunning,
+      running: (status?.running ?? session.running) === true || runningSubagentCount > 0, runningSubagentCount,
       pending: status?.pendingInteraction?.kind ?? null,
       completionUnread: status?.completionUnread === true,
       projectId: project?.workspaceId ?? '', projectTitle: project?.title ?? '未分组',
@@ -140,4 +160,26 @@ export function inboxFilterRows(rows, query, projectId, includeArchived) {
   return rows.filter(row => (includeArchived || !row.archived)
     && (projectId === '*' || row.projectId === projectId)
     && (!search || `${row.title} ${row.projectTitle} ${row.path}`.toLocaleLowerCase().includes(search)));
+}
+
+/** Search reveals matches temporarily; it never changes the saved shelf or project folds. */
+export function inboxViewCollapsed(state, category, query, projectId) {
+  return query.trim() ? false : inboxCollapsed(state, category, projectId);
+}
+
+/** Literal text pieces only: highlighting must never interpret a title or query as HTML. */
+export function inboxHighlight(text, query) {
+  const needle = query.trim();
+  if (!needle) return [{ text, match: false }];
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const expression = new RegExp(escaped, 'giu');
+  const pieces = [];
+  let offset = 0;
+  for (const match of text.matchAll(expression)) {
+    if (match.index > offset) pieces.push({ text: text.slice(offset, match.index), match: false });
+    pieces.push({ text: match[0], match: true });
+    offset = match.index + match[0].length;
+  }
+  if (offset < text.length) pieces.push({ text: text.slice(offset), match: false });
+  return pieces;
 }

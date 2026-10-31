@@ -72,15 +72,35 @@ community catalogs, whose inclusion is subject to their own review.
 - Settle and Restore change only the plugin's list metadata. They do not
   archive, delete, stop, or rewrite a conversation.
 - Settled stays at the bottom and scrolls independently when expanded.
-- The native global tool entries move to a bottom grid, retaining their icons,
-  accessible names, callbacks, registration order, and account menu.
+- The native global tool entries sit in a compact top grid, retaining their icons,
+  accessible names, callbacks and registration order. The account menu stays below.
 - The **原布局** button restores the complete original sidebar and session
-  browser. **切到工作台** returns to the workbench.
+  browser from the top control row. **切到工作台** returns to the workbench.
+- Search temporarily reveals matching shelves and project groups, highlights
+  literal matches, and restores saved folds when cleared. It searches titles,
+  project names and paths, not conversation bodies.
+- The row's **⋯**, right click or Shift+F10 opens the native session menu, including
+  pin, rename, fork, archive and registered menu extensions. Double-click a title
+  to rename it.
+- Unseen completions have a dot and bold title; opening or settling acknowledges
+  them. Pending approval, questions and plan reviews sort first in the untitled inbox.
+- The native search shortcut still works (Command+K by default on macOS). Arrow
+  keys select rows, Home/End move to the first/last visible row, Enter opens,
+  Shift+Enter settles/restores, and Escape clears search and focuses its input.
+  These list keys do not handle events from the conversation editor.
 
 The folder button filters projects. **⋯** controls project grouping, native
 archive visibility, project management, and refresh. An archived chat's open
 button is explicitly labelled “restore and open”: that action uses DSH's native
 unarchive operation; Settle does not.
+
+Search reveals settled matches without changing saved folds:
+
+<img src="assets/search-results.jpg" alt="Search reveals and highlights settled matches" width="900">
+
+Native session operations are available directly in the workbench:
+
+<img src="assets/native-menu.jpg" alt="Native session menu in the workbench" width="900">
 
 ## Compatibility with other plugins
 
@@ -88,10 +108,11 @@ This is a session-browser replacement, not a universal skin for every plugin.
 
 | Plugin extension | Behavior |
 | --- | --- |
-| Standard `sidebar.panellist` entries | Discovered by the official sidebar and displayed in the bottom grid; additional entries wrap onto another row. |
+| Standard `sidebar.panellist` entries | Discovered by the official sidebar and displayed in the top tool grid; additional entries wrap onto another row. |
 | Models, tools, MCP, skills, conversation panels | Their registrations and configuration remain in DSH. This package does not replace them. |
 | Context, image generation, tide badge, task board | Coexistence and their available UI entries were verified on macOS DSH 0.2.1-rc.5. |
-| Native session-row menus, hover extensions and row actions | Retained in the original browser. The workbench has its own rows; switch to **原布局** to use these extensions. |
+| Native session-row menus, leading decorations and hover extensions | Rendered through the original slot contracts, retaining native operations and permission checks. Individual third-party extensions still need their own verification. |
+| Extra hover buttons registered only through `sidebar.workspaces.session.row.action` | The workbench keeps its menu and Settle actions compact. Row-button-only extensions remain available in the original layout. |
 | Another plugin replacing `sidebar`, `sidebar.workspaces`, or the `uiWorkspace` service | Mutually exclusive unless specifically adapted. Keep only one replacement enabled. |
 | Themes that override sidebar geometry or generated native classes | May need an adaptation; not covered by a blanket compatibility claim. |
 
@@ -103,6 +124,17 @@ part of the chat log and are not shared across devices. Clearing site data
 removes those extra marks. Fresh user activity or renewed execution reopens a settled conversation; it
 returns to the upper inbox once execution completes. Old history hydration
 does not reopen a settled conversation.
+
+Use **⋯ → 导出整理备份…** to save a JSON backup and **恢复整理备份…** to preview
+and merge it. The file contains session identifiers, Settle timestamps and display
+preferences; it excludes conversation bodies, titles, paths and account settings.
+Keep it with your own files. Import retains current marks and preferences by
+default, with an optional preference restore. Active, waiting and newly updated
+conversations cannot be hidden by importing an old backup. This is list metadata
+backup, not a conversation export or cross-device chat sync. A saved file is
+needed to recover those marks after clearing site data.
+
+<img src="assets/backup-preview.jpg" alt="Preview a metadata backup before merging" width="900">
 
 Switching layouts does not uninstall anything. To remove a standard bundle, use
 DSH's plugin manager, or for the CLI profile:
@@ -135,12 +167,14 @@ settled empty chats. The macOS desktop was also exercised with real model
 turns, project creation/rename, filters, collapse/expand, native tool navigation,
 layout switching, and cold starts. That evidence does not establish universal
 third-party or cross-platform support.
+Search expansion, literal highlighting, pending priority, completion acknowledgement,
+backup validation and merge preservation have additional regression checks.
 
 ## Attribution
 
 [DeepSeek's MIT notice](vendor/LICENSE.deepseek) is retained for the version-pinned
 native workspace adapter. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-The layout was inspired by T3 Code's compact header, utility footer, and
-Working/Settled organization; no T3 Code implementation is included.
+The compact header and Working/Settled organization were inspired by T3 Code.
+This workbench keeps its tool grid above the list; no T3 Code implementation is included.
 
 Independent community project, not affiliated with DeepSeek or T3 Code.

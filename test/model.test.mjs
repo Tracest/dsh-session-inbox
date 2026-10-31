@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { inboxEmptyState, inboxParseState, inboxCategory, inboxSettle, inboxRestore,
-  inboxReconcile, inboxRows, inboxFilterRows, inboxCollapsed, inboxPartition } from '../src/model.mjs';
+  inboxReconcile, inboxRows, inboxFilterRows, inboxCollapsed, inboxPartition, inboxViewCollapsed, inboxHighlight,
+  inboxComplete, inboxAcknowledge } from '../src/model.mjs';
 
 const row = (patch = {}) => ({ id: 'a', title: '历史会话', stamp: '100', updatedAt: 100,
   blank: false, running: false, pending: null, archived: false, projectId: 'p',
@@ -182,8 +183,58 @@ test('partition returns completed or waiting work to the inbox top without mutat
   const before = JSON.stringify(state);
   const result = inboxPartition([newer, running, done, oldRun, approval], state,
     { 'old-run': 500, approval: 400 });
-  assert.deepEqual(result.active.map(item => item.id), ['old-run', 'approval', 'newer']);
+  assert.deepEqual(result.active.map(item => item.id), ['approval', 'old-run', 'newer']);
   assert.deepEqual(result.working.map(item => item.id), ['running']);
   assert.deepEqual(result.settled.map(item => item.id), ['done']);
   assert.equal(JSON.stringify(state), before);
+});
+
+test('search exposes collapsed shelves and projects without overwriting saved folds', () => {
+  const state = { ...inboxEmptyState(), collapsed: { settled: true, running: true, 'active:p': true } };
+  const before = JSON.stringify(state);
+  for (const category of ['working', 'settled']) {
+    assert.equal(inboxViewCollapsed(state, category, '验收'), false);
+    assert.equal(inboxViewCollapsed(state, category, ''), true);
+  }
+  assert.equal(inboxViewCollapsed(state, 'active', '验收', 'p'), false);
+  assert.equal(inboxViewCollapsed(state, 'active', ' ', 'p'), true);
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('highlighting treats markup and regular expression characters as literal text', () => {
+  for (const query of ['[a].*', '<script>', 'C++', '$x', '中文']) {
+    const text = `before ${query} after ${query}`;
+    const parts = inboxHighlight(text, query);
+    assert.equal(parts.map(part => part.text).join(''), text);
+    assert.deepEqual(parts.filter(part => part.match).map(part => part.text), [query, query]);
+  }
+  assert.deepEqual(inboxHighlight('DeepSeek deepseek', 'DEEPSEEK').filter(part => part.match).map(part => part.text), ['DeepSeek', 'deepseek']);
+  assert.deepEqual(inboxHighlight('标题', '无匹配'), [{ text: '标题', match: false }]);
+});
+
+test('pending interaction sorts ahead of pinned idle work without creating a category', () => {
+  const rows = [row({ id: 'pinned', pinned: true, updatedAt: 900 }),
+    row({ id: 'question', pending: 'question', updatedAt: 100 }),
+    row({ id: 'done', completionUnread: true, updatedAt: 800 })];
+  const groups = inboxPartition(rows, inboxEmptyState());
+  assert.deepEqual(Object.keys(groups), ['active', 'working', 'settled']);
+  assert.deepEqual(groups.active.map(item => item.id), ['question', 'pinned', 'done']);
+});
+
+test('completion reminders follow the native status and clear when the native owner acknowledges them', () => {
+  const list = { ids: ['a'], byId: { a: { id: 'a', title: '结果', updatedAt: 100 } } };
+  const statuses = new Map([['a', { running: false, completionUnread: true }]]);
+  assert.equal(inboxRows(list, [], statuses, [], [])[0].completionUnread, true);
+  statuses.set('a', { running: false, completionUnread: false });
+  assert.equal(inboxRows(list, [], statuses, [], [])[0].completionUnread, false);
+});
+
+test('completions behind a global panel remain unread until opened or settled, including after reload', () => {
+  const unread = inboxParseState(JSON.stringify(inboxComplete(inboxEmptyState(), 'a', 500)));
+  assert.deepEqual(unread.unread, { a: 500 });
+  assert.deepEqual(inboxAcknowledge(unread, 'a').unread, {});
+  assert.deepEqual(inboxSettle(unread, row(), 600).unread, {});
+  assert.deepEqual(inboxReconcile(unread, [row({ running: true })]).unread, {});
+  assert.equal(unread.unread.a, 500);
+  assert.equal(inboxAcknowledge(unread, 'missing'), unread);
 });
