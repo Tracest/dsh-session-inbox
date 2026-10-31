@@ -40,6 +40,18 @@ If you are upgrading the earlier local-only build, remove its marked
 before adding this standard bundle. Never load both copies at once. Chat logs
 and local Settle records use the same storage key and remain available.
 
+## Discover index
+
+On DSH 0.2.1, enable the experimental **Custom plugin markets** bundle, then
+add this URL in **Plugins → Discover → Add index source**:
+
+```text
+https://raw.githubusercontent.com/Tracest/dsh-session-inbox/main/market/index.json
+```
+
+This is the author-maintained source for this plugin. It is separate from
+community catalogs, whose inclusion is subject to their own review.
+
 ## What it changes
 
 - Compact header with New session and the native sidebar toggle.

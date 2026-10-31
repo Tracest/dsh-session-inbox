@@ -31,6 +31,16 @@ Web 界面可加载同一组件；Windows、Linux 桌面布局尚未验收，当
 从早期本地版升级：先用早期版本的恢复脚本移除 `# dsh-session-inbox managed section` 覆盖段，
 再安装标准插件包，避免两份同时加载。聊天不删除，整理状态沿用同一个本地存储键。
 
+## 发现页订阅
+
+在 DSH 0.2.1 中开启实验性“自定义插件市场”，然后进入“插件 → 发现 → 添加索引源”，填写：
+
+```text
+https://raw.githubusercontent.com/Tracest/dsh-session-inbox/main/market/index.json
+```
+
+这是作者维护的可直接安装索引，与需要单独审核的社区总目录是两回事。
+
 ## 使用
 
 - 顶部是紧凑标识、新会话和收起按钮；搜索、项目筛选、列表设置共用一行。
