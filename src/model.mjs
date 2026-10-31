@@ -45,12 +45,18 @@ export function inboxRelativeTime(timestamp, now = Date.now()) {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-/** Human interactions outrank ongoing work, which outranks an old manual Settle mark. */
+/** Working is the T3-style shelf of every unsettled chat, including idle and waiting chats. */
 export function inboxCategory(row, state) {
-  if (row.pending) return 'attention';
-  if (row.running) return 'working';
+  if (row.pending || row.running) return 'working';
   const mark = state.settled[row.id];
-  return mark && !inboxHasNewActivity(row, mark) ? 'settled' : 'attention';
+  return mark && !inboxHasNewActivity(row, mark) ? 'settled' : 'working';
+}
+
+/** Keep old project folds while replacing the former attention/running shelves with one shelf. */
+export function inboxCollapsed(state, category, projectId) {
+  if (projectId === undefined) return state.collapsed[category === 'working' ? 'active' : category] === true;
+  const key = `${category}:${projectId}`;
+  return (state.collapsed[key] ?? (category === 'working' ? state.collapsed[`attention:${projectId}`] : false)) === true;
 }
 
 /** Lazy history hydration may replace a zero/stale timestamp with an older prompt.

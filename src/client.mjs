@@ -1,7 +1,7 @@
 /** UI adapter, compiled inside the pinned workspace module to preserve DSH navigation and slot contracts. */
 function createInboxBrowser(OriginalBrowser, ctx) {
   const h = react.createElement;
-  const labels = { attention: '需要处理', working: '工作中', settled: '已整理' };
+  const labels = { working: '工作中', settled: '已整理' };
 
   class InboxBoundary extends react.Component {
     state = { failed: false };
@@ -115,8 +115,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         inboxPublishMode(mode);
       }
     };
-    const toggleCollapsed = key => update(previous => ({ ...previous,
-      collapsed: { ...previous.collapsed, [key]: !previous.collapsed[key] },
+    const toggleCollapsed = (key, legacyKey) => update(previous => ({ ...previous,
+      collapsed: { ...previous.collapsed, [key]: !(previous.collapsed[key] ?? previous.collapsed[legacyKey]) },
     }));
     const settle = row => {
       if (update(previous => inboxSettle(previous, row))) {
@@ -144,7 +144,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       const pendingText = { approval: '等待审批', question: '等待回答', 'plan-review': '等待审阅' }[row.pending];
       const detail = row.pending ? pendingText || '等待处理' : row.archived ? '原生归档' : row.running ? '正在工作' : row.completionUnread ? '有新结果' : '';
       const blocked = row.blank || row.running || Boolean(row.pending) || Boolean(record.error);
-      return h('div', { key: row.id, role: 'treeitem', className: `dsi-row ${row.running ? 'dsi-running' : ''}`,
+      return h('div', { key: row.id, role: 'treeitem', className: `dsi-row${row.pending ? ' dsi-waiting' : row.running ? ' dsi-running' : ''}`,
         'aria-selected': currentId === row.id, 'data-inbox-session-id': row.id, 'data-inbox-category': category },
       h('button', { type: 'button', className: 'dsi-open', title: `${row.title}\n${row.projectTitle}${row.path ? `\n${row.path}` : ''}`,
         'aria-label': `${row.archived ? '恢复并打开' : '打开会话'}：${row.title}`, onClick: () => open(row) },
@@ -154,7 +154,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       h('span', { className: 'dsi-row-end' },
         h('time', { className: 'dsi-time', title: row.updatedAt ? new Date(row.updatedAt).toLocaleString('zh-CN') : undefined }, inboxRelativeTime(row.updatedAt, clock)),
       category === 'settled' ? h('button', { type: 'button', className: 'dsi-row-action',
-        'aria-label': `恢复会话：${row.title}`, title: '恢复到需要处理', onClick: () => restore(row.id) }, '↶')
+        'aria-label': `恢复会话：${row.title}`, title: '恢复到工作中', onClick: () => restore(row.id) }, '↶')
         : h('button', { type: 'button', className: 'dsi-row-action', disabled: blocked,
           'aria-label': `Settle：${row.title}`, title: blocked ? '工作或等待回复结束后可整理' : 'Settle：整理到已整理，不删除记录',
           onClick: () => settle(row) }, '✓')));
@@ -162,8 +162,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
 
     function renderSection(category) {
       const members = visible.filter(row => inboxCategory(row, state) === category);
-      if (category === 'working' && members.length === 0) return null;
-      const collapsed = state.collapsed[category] === true;
+      const collapsed = inboxCollapsed(state, category);
       const groups = new Map();
       for (const row of members) {
         const key = state.groupByProject ? row.projectId : '*';
@@ -172,24 +171,24 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       }
       return h('section', { key: category, className: `dsi-section dsi-${category}${members.length ? '' : ' dsi-section-empty'}`, 'data-inbox-section': category },
         h('div', { className: 'dsi-section-heading' }, h('button', { type: 'button', className: 'dsi-section-head', 'aria-expanded': !collapsed,
-          'aria-label': `${labels[category]} ${members.length}`, onClick: () => toggleCollapsed(category) },
+          'aria-label': `${labels[category]} ${members.length}`, onClick: () => toggleCollapsed(category === 'working' ? 'active' : category) },
           h('span', { 'aria-hidden': true }, collapsed ? '›' : '⌄'),
           h('span', null, labels[category]), h('span', { className: 'dsi-count' }, members.length)),
           category === 'settled' && h('button', { type: 'button', className: 'dsi-original-toggle', 'aria-label': '一键切回原布局',
             title: '一键恢复 DSH 原布局，保留聊天和整理记录', onClick: () => setMode('original') }, '原布局')),
-        !collapsed && h('div', { className: 'dsi-section-body' }, members.length === 0 ? h('div', { className: 'dsi-empty' }, query.trim() ? '没有匹配的会话' : category === 'settled' ? '点会话右侧 ✓ 即可整理' : '这里已处理完')
+        !collapsed && h('div', { className: 'dsi-section-body' }, members.length === 0 ? h('div', { className: 'dsi-empty' }, query.trim() ? '没有匹配的会话' : category === 'settled' ? '点会话右侧 ✓ 即可整理' : '暂无会话，点顶部按钮开始新会话')
           : [...groups].map(([key, group]) => {
             const groupKey = `${category}:${key}`;
-            const closed = state.collapsed[groupKey] === true;
+            const closed = inboxCollapsed(state, category, key);
             return h('div', { key, className: 'dsi-project', 'data-inbox-project': key },
               state.groupByProject && h('button', { type: 'button', className: 'dsi-project-head',
-                'aria-expanded': !closed, onClick: () => toggleCollapsed(groupKey) },
+                'aria-expanded': !closed, onClick: () => toggleCollapsed(groupKey, category === 'working' ? `attention:${key}` : undefined) },
                 `${closed ? '›' : '⌄'}  ${group.title}`, h('span', { className: 'dsi-count' }, group.rows.length)),
               (!closed || !state.groupByProject) && h('div', { role: 'group' }, group.rows.map(row => renderRow(row, category))));
           })));
     }
 
-    return h('div', { className: 'dsi-root', 'data-session-inbox-version': '0.3.0',
+    return h('div', { className: 'dsi-root', 'data-session-inbox-version': '0.3.1',
       'data-inbox-catalog-count': list.ids.length, 'data-inbox-summary-count': Object.keys(list.byId).length },
       state.mode === 'original' && h('div', { className: 'dsi-modebar' }, h('strong', null, '原生会话列表'),
         h('span', { className: 'dsi-mode-spacer' }),
@@ -235,7 +234,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
           h('div', { className: 'dsi-list', role: 'tree', 'aria-label': '按工作状态整理的会话' },
             h('div', { className: 'dsi-open-sections' },
               list.phase !== 'ready' && h('div', { role: 'status', className: 'dsi-empty' }, '正在读取历史会话…'),
-              ...['working', 'attention'].map(renderSection)), renderSection('settled')),
+              renderSection('working')), renderSection('settled')),
           metadataLoading > 0 && h('div', { className: 'dsi-footnote', role: 'status' }, `正在读取 ${metadataLoading} 条历史摘要…`))));
   }
   return SessionInboxBrowser;

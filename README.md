@@ -3,14 +3,14 @@
 [简体中文](README.zh-CN.md) · [MIT license](LICENSE)
 
 A compact session sidebar for **DeepSeek Harness 0.2.1-rc.5**. Group conversations
-by project, follow **Working** and **Needs attention**, move finished work into
+by project, keep all unsettled chats in **Working**, move finished work into
 **Settled**, and switch back to the full original DSH layout with one click.
 
 The current workbench labels are Chinese. **macOS Desktop is the verified
 platform.** The same browser component can load in `dsh web`; Windows and Linux
 desktop geometry have not been accepted as supported platforms.
 
-<img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="280">
+<img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">
 
 ## Install
 
@@ -56,8 +56,9 @@ community catalogs, whose inclusion is subject to their own review.
 
 - Compact header with New session and the native sidebar toggle.
 - One search row with project filter and list options.
-- Running sessions appear at the top; approvals/questions remain in Needs
-  attention. Empty Working sections are hidden.
+- Working includes every unsettled conversation, whether running, waiting for
+  approval, or idle. Per-row indicators show live status; there is no separate
+  Needs attention section.
 - Settle and Restore change only the plugin's list metadata. They do not
   archive, delete, stop, or rewrite a conversation.
 - Settled stays at the bottom and scrolls independently when expanded.
@@ -90,7 +91,7 @@ Preferences, collapsed groups, and Settle marks stay in the current DSH
 browser origin's `localStorage`, under `dsh-session-inbox:state:v1`. They are not
 part of the chat log and are not shared across devices. Clearing site data
 removes those extra marks. Fresh user activity or renewed execution brings a
-settled conversation back to attention; old history hydration does not.
+settled conversation back to Working; old history hydration does not.
 
 Switching layouts does not uninstall anything. To remove a standard bundle, use
 DSH's plugin manager, or for the CLI profile:

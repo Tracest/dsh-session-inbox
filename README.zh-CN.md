@@ -3,9 +3,9 @@
 [English](README.md) · [MIT 许可证](LICENSE)
 
 包名：**`dsh-session-inbox`**。适配 **DeepSeek Harness 0.2.1-rc.5**，界面为中文，
-已在 macOS 官方桌面版实际验证。支持项目分组、工作中、需要处理、一键 Settle 和完整原布局切换。
+已在 macOS 官方桌面版实际验证。支持项目分组、工作中 / 已整理两栏、一键 Settle 和完整原布局切换。
 
-<img src="assets/sidebar.jpg" alt="DSH 会话工作台实际侧栏截图" width="280">
+<img src="assets/sidebar.jpg" alt="DSH 会话工作台实际侧栏截图" width="900">
 
 ## 安装
 
@@ -44,7 +44,7 @@ https://raw.githubusercontent.com/Tracest/dsh-session-inbox/main/market/index.js
 ## 使用
 
 - 顶部是紧凑标识、新会话和收起按钮；搜索、项目筛选、列表设置共用一行。
-- 工作中会话置顶；审批、问题或计划审阅优先进入需要处理；没有运行任务时隐藏工作中区域。
+- 与 T3 一样，未整理会话统一留在“工作中”，包括运行中、等待回复和空闲会话；正在运行或等待审批时在会话行内显示状态，不再设置“需要处理”分栏。
 - 会话右侧 ✓ 执行 Settle，移入底部已整理；↶ 可恢复。运行中或等待回复时不能误整理。
 - Settle 只改列表元数据，不执行归档、删除、停止或聊天日志改写。会话再次运行或有新消息会自动重新出现。
 - 已整理固定在底部，展开内容独立滚动。

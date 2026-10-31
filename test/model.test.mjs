@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { inboxEmptyState, inboxParseState, inboxCategory, inboxSettle, inboxRestore,
-  inboxReconcile, inboxRows, inboxFilterRows } from '../src/model.mjs';
+  inboxReconcile, inboxRows, inboxFilterRows, inboxCollapsed } from '../src/model.mjs';
 
 const row = (patch = {}) => ({ id: 'a', title: '历史会话', stamp: '100', updatedAt: 100,
   blank: false, running: false, pending: null, archived: false, projectId: 'p',
@@ -11,7 +11,7 @@ test('Settle and restore edit only plugin metadata and preserve the session obje
   const session = Object.freeze(row());
   const state = inboxSettle(inboxEmptyState(), session, 200);
   assert.equal(inboxCategory(session, state), 'settled');
-  assert.equal(inboxCategory(session, inboxRestore(state, 'a')), 'attention');
+  assert.equal(inboxCategory(session, inboxRestore(state, 'a')), 'working');
   assert.equal(session.title, '历史会话');
   assert.deepEqual(Object.keys(state.settled), ['a']);
 });
@@ -20,7 +20,7 @@ test('pending approval, question, and plan review remain visible even when runni
   const settled = inboxSettle(inboxEmptyState(), row(), 200);
   for (const pending of ['approval', 'question', 'plan-review']) {
     const active = row({ running: true, pending });
-    assert.equal(inboxCategory(active, settled), 'attention');
+    assert.equal(inboxCategory(active, settled), 'working');
     assert.equal(inboxSettle(settled, active), settled);
   }
 });
@@ -32,17 +32,17 @@ test('ongoing work cannot be accidentally hidden or stopped by Settle', () => {
   assert.equal(inboxCategory(busy, state), 'working');
 });
 
-test('a resumed settled session becomes working then attention after completion', () => {
+test('a resumed settled session remains on the Working shelf after completion', () => {
   let state = inboxSettle(inboxEmptyState(), row(), 200);
   state = inboxReconcile(state, [row({ running: true })]);
   assert.equal(inboxCategory(row({ running: true }), state), 'working');
-  assert.equal(inboxCategory(row(), state), 'attention');
+  assert.equal(inboxCategory(row(), state), 'working');
 });
 
 test('new user activity reopens a settled session after an offline interval', () => {
   const state = inboxSettle(inboxEmptyState(), row(), 200);
   const resumed = row({ stamp: '300', updatedAt: 300 });
-  assert.equal(inboxCategory(resumed, state), 'attention');
+  assert.equal(inboxCategory(resumed, state), 'working');
   assert.deepEqual(inboxReconcile(state, [resumed]).settled, {});
 });
 
@@ -123,7 +123,7 @@ test('hydrating an older prompt never clears a user Settle mark', () => {
   assert.equal(inboxCategory(hydrated, state), 'settled');
   assert.equal(inboxReconcile(state, [hydrated]), state);
   const newPrompt = row({ stamp: '1100', updatedAt: 1100 });
-  assert.equal(inboxCategory(newPrompt, state), 'attention');
+  assert.equal(inboxCategory(newPrompt, state), 'working');
   assert.deepEqual(inboxReconcile(state, [newPrompt]).settled, {});
 });
 
@@ -144,4 +144,27 @@ test('a blank chat explicitly settled before metadata hydration stays visible in
   const state = inboxSettle(inboxEmptyState(), row({ id: 'legacy', stamp: '0' }), 1000);
   assert.equal(inboxCategory(rows[0], state), 'settled');
   assert.equal(inboxReconcile(state, rows), state);
+});
+
+test('the Working shelf includes both idle and running unsettled chats', () => {
+  const state = inboxEmptyState();
+  assert.equal(inboxCategory(row(), state), 'working');
+  assert.equal(inboxCategory(row({ running: true }), state), 'working');
+  for (const pending of ['approval', 'question', 'plan-review']) {
+    assert.equal(inboxCategory(row({ pending }), state), 'working');
+    assert.equal(inboxSettle(state, row({ pending })), state);
+  }
+});
+
+test('the merged shelf keeps old project folds without inheriting an empty running shelf fold', () => {
+  const state = { ...inboxSettle(inboxEmptyState(), row(), 200),
+    collapsed: { working: true, attention: true, 'attention:p': true, settled: true } };
+  assert.equal(inboxCollapsed(state, 'working'), false);
+  assert.equal(inboxCollapsed(state, 'working', 'p'), true);
+  assert.equal(inboxCategory(row(), state), 'settled');
+  const expandedProject = { ...state, collapsed: { ...state.collapsed, 'working:p': false } };
+  assert.equal(inboxCollapsed(expandedProject, 'working', 'p'), false);
+  const closedShelf = { ...state, collapsed: { ...state.collapsed, active: true } };
+  assert.equal(inboxCollapsed(closedShelf, 'working'), true);
+  assert.equal(inboxCollapsed(closedShelf, 'settled'), true);
 });

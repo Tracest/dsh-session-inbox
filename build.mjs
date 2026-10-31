@@ -56,7 +56,7 @@ fs.mkdirSync(new URL('./lib', import.meta.url), { recursive: true });
 fs.writeFileSync(new URL('./lib/client.js', import.meta.url), compiled);
 fs.writeFileSync(new URL('./lib/index.js', import.meta.url), '// Browser-only UI replacement.\nexport function apply() {}\n');
 fs.writeFileSync(new URL('./lib/build-info.json', import.meta.url), JSON.stringify({
-  version: '0.3.0', dshVersion: '0.2.1-rc.5',
+  version: '0.3.1', dshVersion: '0.2.1-rc.5',
   upstreamSha256: Object.fromEntries(Object.entries(originals).map(([key, source]) => [key, crypto.createHash('sha256').update(source).digest('hex')])),
 }, null, 2) + '\n');
-console.log('Built DSH session workbench 0.3.0 with native workspace navigation and scoped sidebar styles.');
+console.log('Built DSH session workbench 0.3.1 with native workspace navigation and scoped sidebar styles.');
