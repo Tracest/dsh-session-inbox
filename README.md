@@ -3,14 +3,20 @@
 [简体中文](README.zh-CN.md) · [MIT license](LICENSE)
 
 A compact session sidebar for **DeepSeek Harness 0.2.1-rc.5**. Group conversations
-by project, keep all unsettled chats in **Working**, move finished work into
-**Settled**, and switch back to the full original DSH layout with one click.
+by project when needed, review completed or actionable chats in an **untitled
+upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
+move finished work into **Settled**. Restore the original DSH layout with one click.
 
 The current workbench labels are Chinese. **macOS Desktop is the verified
 platform.** The same browser component can load in `dsh web`; Windows and Linux
 desktop geometry have not been accepted as supported platforms.
 
 <img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">
+
+Completed work stays at the top without a section heading. During execution,
+Working appears above Settled at the bottom:
+
+<img src="assets/working-bottom.jpg" alt="Running task in the bottom Working shelf" width="900">
 
 ## Install
 
@@ -56,9 +62,13 @@ community catalogs, whose inclusion is subject to their own review.
 
 - Compact header with New session and the native sidebar toggle.
 - One search row with project filter and list options.
-- Working includes every unsettled conversation, whether running, waiting for
-  approval, or idle. Per-row indicators show live status; there is no separate
-  Needs attention section.
+- The upper inbox has no section title. Completed, idle and awaiting-input chats
+  are shown there directly; they remain until manually settled.
+- Only unattended running work goes into the bottom Working shelf. Completion
+  or a request for input returns it to the upper inbox, ordered by return time.
+  The Working shelf is hidden when empty.
+- Project grouping is optional and defaults off. It groups only the upper inbox;
+  bottom shelves stay compact and show the project on each row.
 - Settle and Restore change only the plugin's list metadata. They do not
   archive, delete, stop, or rewrite a conversation.
 - Settled stays at the bottom and scrolls independently when expanded.
@@ -90,8 +100,9 @@ This is a session-browser replacement, not a universal skin for every plugin.
 Preferences, collapsed groups, and Settle marks stay in the current DSH
 browser origin's `localStorage`, under `dsh-session-inbox:state:v1`. They are not
 part of the chat log and are not shared across devices. Clearing site data
-removes those extra marks. Fresh user activity or renewed execution brings a
-settled conversation back to Working; old history hydration does not.
+removes those extra marks. Fresh user activity or renewed execution reopens a settled conversation; it
+returns to the upper inbox once execution completes. Old history hydration
+does not reopen a settled conversation.
 
 Switching layouts does not uninstall anything. To remove a standard bundle, use
 DSH's plugin manager, or for the CLI profile:

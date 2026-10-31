@@ -2,7 +2,7 @@
 export const INBOX_STORAGE_KEY = 'dsh-session-inbox:state:v1';
 
 export function inboxEmptyState() {
-  return { version: 1, mode: 'inbox', groupByProject: true, includeArchived: true, settled: {}, collapsed: { settled: true } };
+  return { version: 1, mode: 'inbox', groupByProject: false, includeArchived: true, settled: {}, collapsed: { settled: true } };
 }
 
 /** Reject corrupt/future records instead of silently overwriting the user's metadata. */
@@ -45,18 +45,32 @@ export function inboxRelativeTime(timestamp, now = Date.now()) {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-/** Working is the T3-style shelf of every unsettled chat, including idle and waiting chats. */
+/** T3's inbox is untitled; only unattended execution belongs in the lower Working shelf. */
 export function inboxCategory(row, state) {
-  if (row.pending || row.running) return 'working';
+  if (row.pending) return 'active';
+  if (row.running) return 'working';
   const mark = state.settled[row.id];
-  return mark && !inboxHasNewActivity(row, mark) ? 'settled' : 'working';
+  return mark && !inboxHasNewActivity(row, mark) ? 'settled' : 'active';
 }
 
-/** Keep old project folds while replacing the former attention/running shelves with one shelf. */
+/** Preserve project folds from prior layouts; the untitled inbox itself cannot be collapsed. */
 export function inboxCollapsed(state, category, projectId) {
-  if (projectId === undefined) return state.collapsed[category === 'working' ? 'active' : category] === true;
+  if (category === 'active' && projectId === undefined) return false;
+  if (projectId === undefined) return state.collapsed[category === 'working' ? 'running' : category] === true;
   const key = `${category}:${projectId}`;
-  return (state.collapsed[key] ?? (category === 'working' ? state.collapsed[`attention:${projectId}`] : false)) === true;
+  const legacy = category === 'active'
+    ? state.collapsed[`attention:${projectId}`] ?? state.collapsed[`working:${projectId}`]
+    : false;
+  return (state.collapsed[key] ?? legacy) === true;
+}
+
+/** Finished work and restored chats return to the top without changing durable activity stamps. */
+export function inboxPartition(rows, state, returnedAt = {}) {
+  const groups = { active: [], working: [], settled: [] };
+  for (const row of rows) groups[inboxCategory(row, state)].push(row);
+  groups.active.sort((a, b) => Number(b.pinned) - Number(a.pinned)
+    || Math.max(b.updatedAt, returnedAt[b.id] ?? 0) - Math.max(a.updatedAt, returnedAt[a.id] ?? 0));
+  return groups;
 }
 
 /** Lazy history hydration may replace a zero/stale timestamp with an older prompt.

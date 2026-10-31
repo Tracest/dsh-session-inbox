@@ -1,7 +1,7 @@
 {
   "name": "dsh-session-inbox",
-  "version": "0.3.1",
-  "description": "A compact DSH session workbench with project groups, a Working shelf for unsettled chats, reversible Settle, and the original layout switch.",
+  "version": "0.3.2",
+  "description": "A compact DSH session inbox with an untitled review list above bottom Working and Settled shelves, project groups, reversible Settle, and an original-layout switch.",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
