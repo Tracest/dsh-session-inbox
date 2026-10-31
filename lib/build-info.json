@@ -1,0 +1,8 @@
+{
+  "version": "0.3.0",
+  "dshVersion": "0.2.1-rc.5",
+  "upstreamSha256": {
+    "workspace": "ea4e8374efef652aa917122be1422047ef012b68513421195dec31f79ee0543a",
+    "sidebar": "e1421cbd77f3747da92544aa857ab1e7f832f1eb44ba5b10518370b854cf4c55"
+  }
+}

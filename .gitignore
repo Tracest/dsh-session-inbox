@@ -1,0 +1,7 @@
+node_modules/
+private/
+.test-home/
+reference/
+__pycache__/
+*.tgz
+.DS_Store
