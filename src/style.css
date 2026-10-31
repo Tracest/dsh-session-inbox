@@ -1,5 +1,7 @@
 /* The list follows DSH theme tokens; shell overrides apply only in workbench mode. */
 .dsi-root{display:flex;flex:1;min-height:0;flex-direction:column;gap:10px;width:100%;font-size:var(--dsh-content-font-size-secondary,13px);color:inherit;box-sizing:border-box}
+.dsi-native-root{position:relative;display:flex;flex:1;min-height:0;flex-direction:column;width:100%}
+.dsi-native-return{position:absolute;top:6px;right:106px;z-index:1;height:28px;padding:0 6px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}.dsi-native-return:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}.dsi-native-return:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.dsi-native-root:has(.dsi-native-search-expanded) .dsi-native-return{display:none}
 .dsi-root *{box-sizing:border-box}.dsi-root button,.dsi-root input,.dsi-root select{font:inherit;color:inherit}
 .dsi-modebar{display:flex;align-items:center;gap:6px;padding:4px 12px}.dsi-modebar strong{font-size:12px;font-weight:600}.dsi-mode-spacer{flex:1}
 .dsi-modebar button,.dsi-filterline button,.dsi-notice button{border:1px solid color-mix(in srgb,currentColor 13%,transparent);background:transparent;border-radius:7px;padding:4px 7px;cursor:pointer;font-size:11px}

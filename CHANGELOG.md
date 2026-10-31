@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1 — 2026-10-31
+
+- Fix missing native list, row and workspace-picker CSS after switching to the original layout.
+  Compact-shell cleanup now preserves all four native compatibility sheets.
+- Isolate original mode from workbench input/button styles.
+- Keep the original list's default spacing; use a small return control beside its
+  header rather than an additional toolbar. It hides while native search is open.
+- Prevent disposal of an older shell instance from clearing the replacement's layout mode.
+
 ## 0.4.0 — 2026-10-31
 
 - Put the five native tool entries and original-layout control above the session list.

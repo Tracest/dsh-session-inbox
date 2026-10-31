@@ -376,13 +376,10 @@ function createInboxBrowser(OriginalBrowser, ctx) {
           : renderMembers(category)));
     }
 
-    return h('div', { ref: rootRef, className: 'dsi-root', onKeyDown: onListKeyDown, 'data-session-inbox-version': INBOX_PLUGIN_VERSION,
+    return h('div', { ref: rootRef, className: state.mode === 'original' ? 'dsi-native-root' : 'dsi-root', onKeyDown: onListKeyDown, 'data-session-inbox-version': INBOX_PLUGIN_VERSION,
       'data-inbox-catalog-count': list.ids.length, 'data-inbox-summary-count': Object.keys(list.byId).length },
-      state.mode === 'original' && h('div', { className: 'dsi-modebar' }, h('strong', null, '原生会话列表'),
-        h('span', { className: 'dsi-mode-spacer' }),
-        h('button', { type: 'button', 'aria-label': '刷新会话目录', title: '重新读取会话目录，不重启后台任务', onClick: refresh }, '⟳'),
-        h('button', { type: 'button', onClick: () => setMode(state.mode === 'original' ? 'inbox' : 'original'),
-          'aria-label': state.mode === 'original' ? '切到会话工作台' : '一键切回原布局' }, state.mode === 'original' ? '切到工作台' : '原布局')),
+      state.mode === 'original' && h('button', { type: 'button', className: 'dsi-native-return',
+        onClick: () => setMode('inbox'), 'aria-label': '切到会话工作台', title: '返回会话工作台，保留聊天和整理记录' }, '切到工作台'),
       record.error && h('div', { role: 'alert', className: 'dsi-notice' }, record.error),
       state.mode === 'original' ? h('div', { className: 'dsi-original' }, h(OriginalBrowser, props))
         : h(InboxBoundary, { originalProps: props, onOriginal: () => setMode('original') }, h(react.Fragment, null,

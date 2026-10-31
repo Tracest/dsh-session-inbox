@@ -76,6 +76,8 @@ community catalogs, whose inclusion is subject to their own review.
   accessible names, callbacks and registration order. The account menu stays below.
 - The **原布局** button restores the complete original sidebar and session
   browser from the top control row. **切到工作台** returns to the workbench.
+  Original mode keeps the native list's default spacing and CSS; a small return
+  control sits beside its header and hides while native search is expanded.
 - Search temporarily reveals matching shelves and project groups, highlights
   literal matches, and restores saved folds when cleared. It searches titles,
   project names and paths, not conversation bodies.
@@ -101,6 +103,11 @@ Search reveals settled matches without changing saved folds:
 Native session operations are available directly in the workbench:
 
 <img src="assets/native-menu.jpg" alt="Native session menu in the workbench" width="900">
+
+Original mode restores the native sidebar and list styling, with a small return
+control beside the list header:
+
+<img src="assets/original-layout.jpg" alt="Original native sidebar and list verified on 0.4.1" width="900">
 
 ## Compatibility with other plugins
 
@@ -169,6 +176,8 @@ layout switching, and cold starts. That evidence does not establish universal
 third-party or cross-platform support.
 Search expansion, literal highlighting, pending priority, completion acknowledgement,
 backup validation and merge preservation have additional regression checks.
+The native fallback's four CSS payloads and stylesheet lifecycle are also checked,
+including switching modes and disposing a replaced UI module.
 
 ## Attribution
 

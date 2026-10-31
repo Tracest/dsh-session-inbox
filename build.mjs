@@ -43,6 +43,9 @@ for (const key of ['root', 'topStrip', 'logoRow', 'brandIdentity', 'brandMark', 
   const alias = key.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase());
   css = css.replace(new RegExp(`\\.dsi-shell-${alias}(?![-a-z])`, 'g'), `.${match[1]}`);
 }
+const nativeSearchExpanded = originals.workspace.match(/"searchExpanded": "([^"]+)"/);
+if (!nativeSearchExpanded) throw new Error('Missing native search expansion class.');
+css = css.replaceAll('.dsi-native-search-expanded', `.${nativeSearchExpanded[1]}`);
 
 const compiled = `window.__ModuleLoader__.load({id:'dsh-session-inbox',factory:(require)=>{
 const INBOX_PLUGIN_VERSION=${JSON.stringify(version)};
