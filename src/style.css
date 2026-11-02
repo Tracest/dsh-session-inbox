@@ -32,7 +32,7 @@
 .dsi-root .dsi-section-head:hover,.dsi-root .dsi-project-head:hover,.dsi-modebar button:hover,.dsi-filterline button:hover{background:color-mix(in srgb,currentColor 4%,transparent);border-radius:7px}
 @keyframes dsi-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.dsi-running .dsi-dot{animation:none}}
 
-/* Native class aliases are resolved at build time from the pinned official sidebar artifact. */
+/* Native class aliases are resolved from the official sidebar's loaded stylesheet. */
 .dsi-shell-compact .dsi-shell-root{display:grid;grid-template-columns:minmax(0,1fr) 88px;grid-template-rows:36px auto minmax(0,1fr) auto;grid-template-areas:'brand new' 'nav nav' 'region region' 'foot foot';column-gap:8px;row-gap:10px;padding-bottom:6px}
 .dsi-shell-compact .dsi-shell-root:has(.dsi-shell-top-strip){grid-template-columns:minmax(0,1fr) 30px 28px;grid-template-rows:40px auto minmax(0,1fr) auto;grid-template-areas:'brand new strip' 'nav nav nav' 'region region region' 'foot foot foot';column-gap:5px}
 .dsi-shell-compact .dsi-shell-top-strip{grid-area:strip;height:40px;margin:0;padding:0;align-self:center}

@@ -7,9 +7,11 @@ by project when needed, review completed or actionable chats in an **untitled
 upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
-The current workbench labels are Chinese. **macOS Desktop is the verified
-platform.** The same browser component can load in `dsh web`; Windows and Linux
-desktop geometry have not been accepted as supported platforms.
+The current workbench labels are Chinese. macOS Desktop is the original verified
+platform. The `0.4.1+windows.1` build also passed Windows Desktop cold-start,
+compact-grid, and original-layout checks at 1280×820 and 1471×1200, plus search,
+project filtering and native session-menu checks. Linux desktop geometry remains unverified.
+The same browser component can load in `dsh web`.
 
 <img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">
 
@@ -164,9 +166,10 @@ npm pack --dry-run
 ```
 
 No JavaScript dependencies are needed to build the checked-in browser adapter.
-`build.mjs` verifies its replacement hooks, parses the native class map, syntax
-checks the output, and records upstream hashes. The official `ui-sidebar`
-remains loaded. Neither `app.asar` nor user conversations are patched.
+`build.mjs` verifies its replacement hooks, normalizes Windows checkout line endings,
+syntax-checks the output, and records upstream hashes. At startup, compact styles
+resolve the current class map from the official sidebar's own loaded stylesheet.
+The official `ui-sidebar` remains loaded. Neither `app.asar` nor user conversations are patched.
 
 Checks cover classification, safe Settle/restore, resumed work, corrupt state,
 partial catalogs, legacy preferences, stale timestamp hydration, and previously

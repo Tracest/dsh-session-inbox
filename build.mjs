@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import vm from 'node:vm';
 
-const read = path => fs.readFileSync(new URL(path, import.meta.url), 'utf8');
+// Git may check these text inputs out as CRLF on Windows; the generated bundle stays byte-stable.
+const read = path => fs.readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const version = JSON.parse(read('./package.json')).version;
 function replaceOnce(source, marker, replacement) {
   if (source.split(marker).length !== 2) throw new Error(`Unsupported DSH client: ambiguous or missing hook ${marker}`);
@@ -28,21 +29,9 @@ workspace = replaceOnce(workspace, 'const workspaces = ctx.get("workspaces");', 
       queueMicrotask(() => sessions.refresh().catch(error => console.warn('[dsh-session-inbox] Catalog refresh failed', error)));`);
 workspace = replaceOnce(workspace, '\t\texports.apply = apply;', `${read('./src/client.mjs')}\n\t\texports.apply = apply;`);
 
-const rootClass = originals.sidebar.match(/"root": "([^"]+)"/)[1];
-const collapsedClass = originals.sidebar.match(/"collapsed": "([^"]+)"/)[1];
-const shellScope = `html[data-inbox-mode="inbox"] .${rootClass}:not(.${collapsedClass})`;
-let css = read('./src/style.css')
-  .replaceAll('.dsi-shell-compact .dsi-shell-root', shellScope)
-  .replaceAll('.dsi-shell-compact ', `${shellScope} `);
-// Resolve presentation selectors from the pinned class map. No official shell module or callback is replaced.
-for (const key of ['root', 'topStrip', 'logoRow', 'brandIdentity', 'brandMark', 'brandName', 'newSession',
-  'newSessionContent', 'newSessionLabel', 'newSessionLabelMask', 'newSessionShortcut', 'panelList', 'panelRow', 'panelGlyph',
-  'panelTitle', 'moreAnchor', 'regionArea', 'footArea']) {
-  const match = originals.sidebar.match(new RegExp(`"${key}": "([^"]+)"`));
-  if (!match) throw new Error(`Missing sidebar class: ${key}`);
-  const alias = key.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase());
-  css = css.replace(new RegExp(`\\.dsi-shell-${alias}(?![-a-z])`, 'g'), `.${match[1]}`);
-}
+// The official shell stays installed. Its CSS-module hashes differ between Desktop builds,
+// so the browser resolves these aliases from that shell's own loaded stylesheet.
+let css = read('./src/style.css');
 const nativeSearchExpanded = originals.workspace.match(/"searchExpanded": "([^"]+)"/);
 if (!nativeSearchExpanded) throw new Error('Missing native search expansion class.');
 css = css.replaceAll('.dsi-native-search-expanded', `.${nativeSearchExpanded[1]}`);

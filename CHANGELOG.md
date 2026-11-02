@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1+windows.1 — 2026-11-02
+
+- Resolve compact-sidebar CSS classes from the active official sidebar stylesheet,
+  supporting the different class hashes in Windows Desktop builds.
+- Normalize Windows checkout line endings before building the browser adapter.
+- Preserve the official sidebar, all native fallback styles, conversations and list metadata.
+- Verify Windows cold starts, layout switching at 1280×820 and 1471×1200,
+  search, project filtering and native session menus. Add Windows stylesheet regression coverage.
+
 ## 0.4.1 — 2026-10-31
 
 - Fix missing native list, row and workspace-picker CSS after switching to the original layout.

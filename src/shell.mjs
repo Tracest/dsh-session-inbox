@@ -1,13 +1,39 @@
+/** Resolve the official shell's current CSS-module hashes, rather than the vendored build's hashes. */
+function inboxResolveShellCss(template) {
+  const owner = '@deepseek-ai/dsh-client-ui-sidebar';
+  const sheets = [...document.querySelectorAll(`style[data-plugin-css="${owner}/SidebarRoot.module.css"]`)]
+    .filter(style => style.dataset.plugin === owner);
+  if (sheets.length !== 1) throw new Error('Session workbench requires one loaded native SidebarRoot stylesheet.');
+  const classes = {};
+  for (const key of ['root', 'collapsed', 'topStrip', 'logoRow', 'brandIdentity', 'brandMark', 'brandName', 'newSession',
+    'newSessionContent', 'newSessionLabel', 'newSessionLabelMask', 'newSessionShortcut', 'panelList', 'panelRow',
+    'panelGlyph', 'panelTitle', 'moreAnchor', 'regionArea', 'footArea']) {
+    const matches = [...new Set([...sheets[0].textContent.matchAll(new RegExp(`\\.([_a-zA-Z][-\\w]*_${key})(?![-\\w])`, 'g'))]
+      .map(match => match[1]))];
+    if (matches.length !== 1) throw new Error(`Unsupported native sidebar stylesheet: missing or ambiguous ${key} class.`);
+    classes[key] = matches[0];
+  }
+  const scope = `html[data-inbox-mode="inbox"] .${classes.root}:not(.${classes.collapsed})`;
+  let css = template.replaceAll('.dsi-shell-compact .dsi-shell-root', scope)
+    .replaceAll('.dsi-shell-compact ', `${scope} `);
+  for (const [key, className] of Object.entries(classes)) {
+    const alias = key.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase());
+    css = css.replace(new RegExp(`\\.dsi-shell-${alias}(?![-a-z])`, 'g'), `.${className}`);
+  }
+  return css;
+}
+
 /** Retain the official shell and all its plugin seats; scope presentation overrides to workbench mode. */
 function inboxInstallShell(ctx) {
   ctx.effect(() => {
+    const css = inboxResolveShellCss(INBOX_CSS);
     // Native fallback sheets share the plugin ID; replace only the compact shell's own sheet.
     const selector = 'style[data-inbox-shell="dsh-session-inbox"]';
     document.querySelectorAll(selector).forEach(style => style.remove());
     const style = document.createElement('style');
     style.dataset.plugin = 'dsh-session-inbox';
     style.dataset.inboxShell = 'dsh-session-inbox';
-    style.textContent = INBOX_CSS;
+    style.textContent = css;
     document.head.appendChild(style);
     const render = () => { document.documentElement.dataset.inboxMode = inboxReadModeSnapshot(); };
     render();

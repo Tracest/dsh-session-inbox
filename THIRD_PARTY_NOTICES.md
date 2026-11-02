@@ -9,8 +9,10 @@ license are retained in [vendor/LICENSE.deepseek](vendor/LICENSE.deepseek).
   `vendor/sidebar-client-0.2.1-rc.5.js`.
 - `lib/client.js` contains the workspace adapter. `build.mjs` records the SHA-256
   of both original artifacts in `lib/build-info.json`.
-- The sidebar artifact supplies its version-specific CSS class map at build
-  time. The official sidebar remains active at runtime.
+- Compact styles resolve the class map from the active official sidebar's own
+  stylesheet at runtime. The official sidebar remains active.
+- `test/fixtures/sidebar-windows-0.2.1-rc.5.css` retains the native Windows
+  SidebarRoot stylesheet as a regression fixture under the same DeepSeek MIT notice.
 
 T3 Code's compact header and Working/Settled organization were design references.
 This workbench places its utility entries above the list. No T3 Code implementation
