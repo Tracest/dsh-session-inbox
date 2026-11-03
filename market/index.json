@@ -16,8 +16,8 @@
         "zh": "DSH 会话工作台"
       },
       "description": {
-        "en": "Compact top tools, untitled review inbox, lower Working/Settled shelves, native menus, search, keyboard navigation, metadata backups and an original-layout switch. macOS verified; Chinese UI.",
-        "zh": "顶部工具区与原布局切换，上方直接查看会话，下方收纳工作中和已整理；支持原生菜单、搜索高亮、键盘操作及整理备份。已验证 macOS，界面为中文。"
+        "en": "Compact top tools, untitled review inbox, lower Working/Settled shelves, native menus, search, keyboard navigation, metadata backups and an original-layout switch. Chinese UI. On DSH 0.2.1-rc.5: macOS Desktop verified; Windows Desktop checked for cold starts, compact/original layouts at 1280x820 and 1471x1200, search, project filtering and native session menus. Linux and arbitrary third-party plugin combinations remain unverified.",
+        "zh": "顶部工具区与原布局切换，上方直接查看会话，下方收纳工作中和已整理；支持原生菜单、搜索高亮、键盘操作及整理备份。中文界面。DSH 0.2.1-rc.5：macOS 桌面版已验证；Windows 桌面版已检查冷启动、1280×820 与 1471×1200 下的紧凑/原布局、搜索、项目筛选和原生会话菜单。Linux 及任意第三方插件组合仍未验证。"
       },
       "author": "Tracest",
       "homepage": "https://github.com/Tracest/dsh-session-inbox",
@@ -26,6 +26,18 @@
       },
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxODAiIHJ4PSI0MCIgZmlsbD0iIzE3MjAzMyIvPgogIDxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjExNiIgaGVpZ2h0PSIxMTYiIHJ4PSIxNyIgc3Ryb2tlPSIjRDlFNEZBIiBzdHJva2Utd2lkdGg9IjgiLz4KICA8cGF0aCBkPSJNNzAgMzZWMTQ0IiBzdHJva2U9IiNEOUU0RkEiIHN0cm9rZS13aWR0aD0iNyIvPgogIDxwYXRoIGQ9Ik00NSA1N0g1N000NSA3OEg1N000NSA5OUg1NyIgc3Ryb2tlPSIjQTVCRkYyIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik04OSA5M0wxMDQgMTA4TDEzMCA3NiIgc3Ryb2tlPSIjODZFM0MxIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K",
       "versions": [
+        {
+          "version": "0.4.2",
+          "publishTimestamp": 1793687419,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Tracest/dsh-session-inbox",
+            "commit": "81c057616af6f4335cfb75f00954363abfd0988e"
+          },
+          "engines": {
+            "dsh": "0.2.1-rc.5"
+          }
+        },
         {
           "version": "0.4.1",
           "publishTimestamp": 1793447645,
