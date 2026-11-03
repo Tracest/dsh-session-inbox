@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2 — 2026-11-03
+
+- Carry the Windows sidebar fix from `0.4.1+windows.1` under a normal patch version.
+  DSH accepts build metadata but does not treat it as a newer version than `0.4.1`.
+- Rebuild the browser adapter with the new version; runtime behavior is unchanged.
+- Update the author market index and compatibility descriptions for the verified
+  DSH `0.2.1-rc.5` scope. Linux and arbitrary third-party plugin combinations remain unverified.
+
 ## 0.4.1+windows.1 — 2026-11-02
 
 - Resolve compact-sidebar CSS classes from the active official sidebar stylesheet,

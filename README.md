@@ -8,9 +8,11 @@ upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
 The current workbench labels are Chinese. macOS Desktop is the original verified
-platform. The `0.4.1+windows.1` build also passed Windows Desktop cold-start,
+platform. Version `0.4.2` carries the unchanged Windows fix from `0.4.1+windows.1`;
+that build passed Windows Desktop cold-start,
 compact-grid, and original-layout checks at 1280×820 and 1471×1200, plus search,
-project filtering and native session-menu checks. Linux desktop geometry remains unverified.
+project filtering and native session-menu checks on DSH `0.2.1-rc.5`.
+Linux desktop geometry and arbitrary third-party plugin combinations remain unverified.
 The same browser component can load in `dsh web`.
 
 <img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">

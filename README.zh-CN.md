@@ -30,7 +30,8 @@ dsh plugin --profile web add git+https://github.com/Tracest/dsh-session-inbox.gi
 使界面依赖完整重新绑定。
 
 兼容版本刻意限定为 `0.2.1-rc.5`，因为原生界面接口和类名与版本绑定。
-Web 界面可加载同一组件。修复版 `0.4.1+windows.1` 已在 Windows 桌面版验证冷启动、
+Web 界面可加载同一组件。`0.4.2` 沿用 `0.4.1+windows.1` 中未经改动的 Windows 实现；
+后者已在 DSH `0.2.1-rc.5` Windows 桌面版验证冷启动、
 1280×820 与 1471×1200 窗口下的紧凑网格及原布局切换，以及搜索、项目筛选和原生会话菜单。
 Linux 桌面布局仍未验收；这些检查不代表所有第三方主题及插件组合均兼容。
 
