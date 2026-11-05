@@ -2,29 +2,42 @@
 
 [简体中文](README.zh-CN.md) · [MIT license](LICENSE)
 
-A compact session sidebar for **DeepSeek Harness 0.2.2-rc.1**. Group conversations
+A compact session sidebar for **DeepSeek Harness**, with 16 version-specific adapters. Group conversations
 by project when needed, review completed or actionable chats in an **untitled
 upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
-The current workbench labels are Chinese. Version `0.4.4` adds consistent rounded
-monochrome icons and a bottom floating Undo notice. It expires after five seconds,
-pauses while hovered or focused, and does not shift the list. The `0.4.3` release updated the native
-workspace adapter and context-menu integration for DSH `0.2.2-rc.1`. Automated
-checks use the official runtime in an isolated Windows Web profile: installation,
-startup, native menus (button, right click and Shift+F10), search, Settle/restore,
-and layout switching at 1280×820 and 1471×1200. Version `0.4.4` also checks notice
-timing, hover/focus pauses, consecutive actions, Undo, and keyboard dismissal.
-The menu/list checks use empty
-test session presented as nonblank by a browser-only fixture; no model API runs.
-Desktop, macOS, Linux, mobile, live model turns and arbitrary third-party plugin
-combinations on this new DSH version remain unverified.
+The current workbench labels are Chinese. Version `0.4.5` retains the rounded
+monochrome icons and bottom floating Undo notice: five seconds, paused while
+hovered or focused, without shifting the list.
 
-For DSH `0.2.1-rc.5`, keep plugin `0.4.2`. Its original macOS Desktop checks and
-the Windows fix inherited from `0.4.1+windows.1` covered Windows Desktop cold-start,
-compact-grid, and original-layout checks at 1280×820 and 1471×1200, plus search,
-project filtering and native session-menu checks on DSH `0.2.1-rc.5`.
-Those earlier checks do not establish Desktop compatibility with DSH `0.2.2-rc.1`.
+## Supported DSH versions
+
+| Release family | Exact supported versions |
+| --- | --- |
+| 0.1.7 | rc.1, rc.2 |
+| 0.2.0 | rc.1, rc.2 |
+| 0.2.1 | alpha.1–alpha.5, rc.1–rc.5 |
+| 0.2.2 | alpha.3, rc.1 |
+
+Each entry uses the matching published native workspace adapter and menu API.
+The package engine range is an explicit allowlist; untested future releases are
+rejected. Build metadata such as `+desktop.1` does not change the selected adapter.
+Older hosts keep their native capabilities; shortcuts or extension slots absent
+from that host are not invented.
+
+All 16 official runtimes passed 13 checks each in isolated Windows Web profiles:
+startup, native session creation/rename, menus (button, right click and Shift+F10),
+search, Settle/Undo, timer pauses, persistence after reload, backup export/merge,
+and layout switching at 1280×820 and 1471×1200. The list checks use empty test
+sessions presented as nonblank by a browser-only fixture; no model API calls.
+The 75 JavaScript and 6 installer tests also pass. macOS, Linux, mobile, live model
+turns and arbitrary third-party combinations are not covered by this matrix.
+Earlier Desktop evidence for plugin `0.4.2` on DSH `0.2.1-rc.5` remains historical.
+
+DSH `0.2.2-alpha.2` is excluded: its isolated native first-run acknowledgement
+failed even without this plugin. With that acknowledgement preconfigured, session
+creation failed with `agent-preset/invalid`. It did not pass acceptance.
 
 <img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">
 
@@ -178,24 +191,27 @@ npm test
 npm pack --dry-run
 ```
 
-No JavaScript dependencies are needed to build the checked-in browser adapter.
-`build.mjs` verifies its replacement hooks, normalizes Windows checkout line endings,
-syntax-checks the output, and records upstream hashes. At startup, compact styles
+No JavaScript dependencies are needed to build the checked-in browser adapters.
+`compatibility.json` owns the version list; the package engine range must match.
+`build.mjs` verifies every adapter's replacement hooks, normalizes Windows checkout
+line endings, syntax-checks the output, and records upstream hashes. Only the
+selected adapter executes. At startup, compact styles
 resolve the current class map from the official sidebar's own loaded stylesheet.
 The official `ui-sidebar` remains loaded. Neither `app.asar` nor user conversations are patched.
 
 Checks cover classification, safe Settle/restore, resumed work, corrupt state,
 partial catalogs, legacy preferences, stale timestamp hydration, and previously
-settled empty chats. The macOS desktop was also exercised with real model
+settled empty chats. Earlier releases on the macOS desktop were exercised with real model
 turns, project creation/rename, filters, collapse/expand, native tool navigation,
 layout switching, and cold starts. That evidence does not establish universal
 third-party or cross-platform support.
 Search expansion, literal highlighting, pending priority, completion acknowledgement,
 backup validation and merge preservation have additional regression checks.
-The native fallback's three CSS payloads and stylesheet lifecycle are also checked,
+Every adapter's complete native CSS payloads and the stylesheet lifecycle are checked,
 including switching modes and disposing a replaced UI module.
-The adapter uses the native context-menu service for the row menu, right click
-and Shift+F10, and checks native access before enabling title double-click rename.
+New hosts use the native context-menu service; older hosts use native menu slots
+and their open-state context. Both retain button, right-click and Shift+F10 access,
+and use the host's rename permission hook when available.
 
 ## Attribution
 

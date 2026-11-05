@@ -13,8 +13,12 @@ from datetime import datetime, timezone
 SOURCE = Path(__file__).resolve().parent
 MARKER = '# dsh-session-inbox managed section'
 END = '# end dsh-session-inbox managed section'
-# This adapter intentionally targets one exact DSH version, shared with the bundle.
+# Exact alternatives match the tested native adapters; future releases stay guarded.
 SUPPORTED_DSH = json.loads((SOURCE / 'package.json').read_text(encoding='utf-8'))['engines']['dsh']
+
+
+def supports_dsh(version: str) -> bool:
+    return version.strip().split('+', 1)[0] in {item.strip() for item in SUPPORTED_DSH.split('||')}
 
 
 def replace_managed_section(text: str, section: str) -> str:
@@ -49,7 +53,7 @@ def install(profile: Path, app: Path) -> None:
     result = subprocess.run([str(executable), '-e', script, str(asar_manifest)],
                             env={**os.environ, 'ELECTRON_RUN_AS_NODE': '1'},
                             check=True, capture_output=True, text=True)
-    if result.stdout.strip() != SUPPORTED_DSH:
+    if not supports_dsh(result.stdout):
         raise ValueError(f'This build requires DSH {SUPPORTED_DSH}; no changes made.')
     patch = profile / 'cordis.patch.yml'
     original = patch.read_text() if patch.exists() else ''

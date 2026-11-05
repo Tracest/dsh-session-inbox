@@ -1,16 +1,19 @@
 # Third-party notices
 
 This project is MIT licensed. Its compatibility adapter includes the MIT-licensed
-DeepSeek Harness workspace browser for **0.2.2-rc.1**. The original copyright and
+DeepSeek Harness workspace browsers for the **16 versions in compatibility.json**.
+The original copyright and
 license are retained in [vendor/LICENSE.deepseek](vendor/LICENSE.deepseek).
 
 - Upstream: <https://github.com/deepseek-ai/deepseek-harness>
-- Vendored artifacts: `vendor/workspace-client-0.2.2-rc.1.js` and
-  `vendor/sidebar-client-0.2.2-rc.1.js`, taken from the official npm packages
-  `@deepseek-ai/dsh-client-ui-workspace@0.2.2-rc.1` and
-  `@deepseek-ai/dsh-client-ui-sidebar@0.2.2-rc.1`.
-- `lib/client.js` contains the workspace adapter. `build.mjs` records the SHA-256
-  of both original artifacts in `lib/build-info.json`.
+- Vendored artifacts: `vendor/workspace-client-<version>.js` and
+  `vendor/sidebar-client-<version>.js`, taken from the corresponding official npm
+  packages `@deepseek-ai/dsh-client-ui-workspace` and `@deepseek-ai/dsh-client-ui-sidebar`.
+  Versions: 0.1.7-rc.1/rc.2, 0.2.0-rc.1/rc.2, 0.2.1-alpha.1–alpha.5,
+  0.2.1-rc.1–rc.5, 0.2.2-alpha.3/rc.1.
+- `lib/client.js` contains these workspace adapters and executes only the one
+  matching the host. `build.mjs` records each original artifact's SHA-256 in
+  `lib/build-info.json`.
 - Compact styles resolve the class map from the active official sidebar's own
   stylesheet at runtime. The official sidebar remains active.
 - `test/fixtures/sidebar-windows-0.2.1-rc.5.css` retains the native Windows

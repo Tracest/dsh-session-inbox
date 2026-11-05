@@ -1,8 +1,87 @@
 {
-  "version": "0.4.4",
-  "dshVersion": "0.2.2-rc.1",
+  "version": "0.4.5",
+  "dshVersions": [
+    "0.1.7-rc.1",
+    "0.1.7-rc.2",
+    "0.2.0-rc.1",
+    "0.2.0-rc.2",
+    "0.2.1-alpha.1",
+    "0.2.1-alpha.2",
+    "0.2.1-alpha.3",
+    "0.2.1-alpha.4",
+    "0.2.1-alpha.5",
+    "0.2.1-rc.1",
+    "0.2.1-rc.2",
+    "0.2.1-rc.3",
+    "0.2.1-rc.4",
+    "0.2.1-rc.5",
+    "0.2.2-alpha.3",
+    "0.2.2-rc.1"
+  ],
   "upstreamSha256": {
-    "workspace": "bb31f7870381f737b2cb45db4c7911a08a4949856bc86b648a10d3e85a3e9f89",
-    "sidebar": "0a0a32382391acee1a692cf7d2529a2669cc8cc23d4d83b446f6247c3c4562c4"
+    "0.1.7-rc.1": {
+      "workspace": "0d3a310a68ac2fc3245ccd2b44a3849d3f0620d0798cffbc36a67d1dfefd5763",
+      "sidebar": "1ae8962916c2f9eade89cc89e087814adbe257f7aadeaae2dded798b5e1d6cd6"
+    },
+    "0.1.7-rc.2": {
+      "workspace": "854722447794b79607651e6c75d0652db1aba376324f468ab8cd6ecdfe7d177f",
+      "sidebar": "40e651b9967e3fc86f07104dfc1b6fb0074aa36d4d13b3041d39939cd56e9a21"
+    },
+    "0.2.0-rc.1": {
+      "workspace": "0836aba88f74a280014cad906591620f9cd8d842d1abcfb9815874038197e1a4",
+      "sidebar": "57c5c6ac6b74e7757cb545110d5c2c9881efe4f6d2c5265944bf417eb27c690f"
+    },
+    "0.2.0-rc.2": {
+      "workspace": "e784543780fb8ac7c38c853afd26b9b1713c6907eec2b07eff37461e07bd3be9",
+      "sidebar": "88d7e6d2f65350a62f1d97d0ce9be34643c73e9825243ae9307dae55094896a2"
+    },
+    "0.2.1-alpha.1": {
+      "workspace": "09a298e8e7766d223c9e61ce61564e6f72c997eb6b7e6f9b048f727908211bef",
+      "sidebar": "1737ff31a7febe50ea386c016fbe08ae3c0a4b7c3e4df7b378cec3d8b7ac4bff"
+    },
+    "0.2.1-alpha.2": {
+      "workspace": "05ef410f1fbb19857b08a7b3994532328104a8efda3d4ca2948b2c36a581aaf1",
+      "sidebar": "08c750fb59ea242a2f20b79d0d55f6f9fd432dda5f508de98ccf706ce4ca33a2"
+    },
+    "0.2.1-alpha.3": {
+      "workspace": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+      "sidebar": "3778378ed0429c5ec841d0e5eefb5b71285d0e9c40ad1e542c876665de06b6f1"
+    },
+    "0.2.1-alpha.4": {
+      "workspace": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+      "sidebar": "c416167f502d2befc278abf78335b68d27931b54a323276f2cf0ee36f84ed311"
+    },
+    "0.2.1-alpha.5": {
+      "workspace": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+      "sidebar": "1e03752ea65ff16ba11c48620aa6083a722ee7db700bb7128e329c9db7532f35"
+    },
+    "0.2.1-rc.1": {
+      "workspace": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+      "sidebar": "66505838d9228751b1f47f4246f13e36deccc86bdf05a1bad2ae7ebc9d3ec18f"
+    },
+    "0.2.1-rc.2": {
+      "workspace": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+      "sidebar": "4d4535b9ac9160e13067b1f8a8510d158da2aaf6a15191b418a5956261ff9b3e"
+    },
+    "0.2.1-rc.3": {
+      "workspace": "9c2c17a66a5c20de00ac2852cb76debb5237439e97f877403bcaa2a471086544",
+      "sidebar": "739421bef37cc5b1fb45ff76ce732bdcaede7820a684c3ff0c9de9ae97108194"
+    },
+    "0.2.1-rc.4": {
+      "workspace": "9c2c17a66a5c20de00ac2852cb76debb5237439e97f877403bcaa2a471086544",
+      "sidebar": "1de0b5c9b49b78fcc6d7cdf6cbe5d5f278f13bbc064799f38f0c58a7b7c95022"
+    },
+    "0.2.1-rc.5": {
+      "workspace": "9c2c17a66a5c20de00ac2852cb76debb5237439e97f877403bcaa2a471086544",
+      "sidebar": "2d352387e6fd4b320b4e41fe047ff1a3dad4f9681088c7f6aade712263811556"
+    },
+    "0.2.2-alpha.3": {
+      "workspace": "bb31f7870381f737b2cb45db4c7911a08a4949856bc86b648a10d3e85a3e9f89",
+      "sidebar": "07cead30e20b91bf36b0b94d2574f4d7e672a4efbbfab7670376aeb00d89968b"
+    },
+    "0.2.2-rc.1": {
+      "workspace": "bb31f7870381f737b2cb45db4c7911a08a4949856bc86b648a10d3e85a3e9f89",
+      "sidebar": "0a0a32382391acee1a692cf7d2529a2669cc8cc23d4d83b446f6247c3c4562c4"
+    }
   }
 }

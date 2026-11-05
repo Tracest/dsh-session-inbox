@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.5 — 2026-11-05
+
+- Support 16 exact DSH releases: 0.1.7-rc.1/rc.2, 0.2.0-rc.1/rc.2,
+  0.2.1-alpha.1–alpha.5, 0.2.1-rc.1–rc.5 and 0.2.2-alpha.3/rc.1.
+  Select each release's own published workspace adapter; keep unverified versions guarded.
+- Identify older hosts through their owning runtime when the boot manifest lacks
+  release metadata, including launchers installed through directory links.
+- Preserve legacy native menu slots, rename access and keyboard dismissal.
+  Handle older optional sidebar wrappers, hover groups, shortcut hooks and row slots.
+- Retain the rounded icons, floating Undo notice, storage key and backup format.
+- Pass 75 JavaScript tests, 6 installer tests and 13 isolated Windows Web checks
+  on each supported runtime (208 browser checks). Fixtures make empty test sessions
+  visible in the workbench; no model API calls or cross-platform acceptance claims.
+- Exclude 0.2.2-alpha.2 after native first-run and session-creation failures;
+  its first-run failure also reproduced without the plugin.
+
 ## 0.4.4 — 2026-11-05
 
 - Give workbench controls a consistent Claude-inspired appearance with small,

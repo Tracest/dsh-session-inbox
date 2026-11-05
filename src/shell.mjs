@@ -5,13 +5,18 @@ function inboxResolveShellCss(template) {
     .filter(style => style.dataset.plugin === owner);
   if (sheets.length !== 1) throw new Error('Session workbench requires one loaded native SidebarRoot stylesheet.');
   const classes = {};
+  // These wrappers were introduced after the first supported sidebar. Their
+  // optional styling must not prevent older native layouts from mounting.
+  const optional = new Set(['newSessionContent', 'newSessionLabelMask', 'newSessionShortcut', 'moreAnchor']);
   for (const key of ['root', 'collapsed', 'topStrip', 'logoRow', 'brandIdentity', 'brandMark', 'brandName', 'newSession',
     'newSessionContent', 'newSessionLabel', 'newSessionLabelMask', 'newSessionShortcut', 'panelList', 'panelRow',
     'panelGlyph', 'panelTitle', 'moreAnchor', 'regionArea', 'footArea']) {
     const matches = [...new Set([...sheets[0].textContent.matchAll(new RegExp(`\\.([_a-zA-Z][-\\w]*_${key})(?![-\\w])`, 'g'))]
       .map(match => match[1]))];
-    if (matches.length !== 1) throw new Error(`Unsupported native sidebar stylesheet: missing or ambiguous ${key} class.`);
-    classes[key] = matches[0];
+    if (matches.length > 1 || (matches.length === 0 && !optional.has(key))) {
+      throw new Error(`Unsupported native sidebar stylesheet: missing or ambiguous ${key} class.`);
+    }
+    classes[key] = matches[0] ?? `dsi-absent-${key}`;
   }
   const scope = `html[data-inbox-mode="inbox"] .${classes.root}:not(.${classes.collapsed})`;
   let css = template.replaceAll('.dsi-shell-compact .dsi-shell-root', scope)

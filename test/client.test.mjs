@@ -7,15 +7,15 @@ import * as model from '../src/model.mjs';
 const source = fs.readFileSync(new URL('../src/client.mjs', import.meta.url), 'utf8');
 const h = (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) });
 function nodes(tree) {
-  return !tree || typeof tree !== 'object' ? [] : [tree, ...tree.children.flatMap(nodes)];
+  return !tree || typeof tree !== 'object' ? [] : [tree, ...tree.children.flatMap(nodes), ...nodes(tree.props.anchor)];
 }
 
-function rowFixture({ blank = false, renamable = true, active = null } = {}) {
+function rowFixture({ blank = false, renamable = true, active = null, legacy = false, accessHook = true } = {}) {
   const calls = [];
   const react = { createElement: h, Component: class {}, Fragment: 'Fragment',
-    useState: value => [typeof value === 'function' ? value() : value, () => {}],
+    useState: value => [typeof value === 'function' ? value() : value, next => calls.push({ kind: 'state', next })],
     useMemo: fn => fn(), useCallback: fn => fn, useRef: current => ({ current }), useEffect: () => {} };
-  const context = vm.createContext({ ...model, react, INBOX_PLUGIN_VERSION: 'test',
+  const context = vm.createContext({ ...model, react, INBOX_PLUGIN_VERSION: 'test', INBOX_HAS_LEADING_SLOT: true,
     localStorage: { getItem: () => blank
       ? JSON.stringify({ ...model.inboxEmptyState(), settled: { chat: { stamp: '100', at: 200 } }, collapsed: {} }) : null },
     workspaceDisplayTitle: title => title,
@@ -38,12 +38,19 @@ function rowFixture({ blank = false, renamable = true, active = null } = {}) {
     useSessionAccess: (id, action) => { calls.push({ kind: 'access', id, action }); return renamable; },
     openSessionMenu: (...args) => calls.push({ kind: 'menu', args }),
     requestSessionRename: (...args) => calls.push({ kind: 'rename', args }),
-    renderSlot: name => { calls.push({ kind: 'slot', name }); return null; },
+    renderSlot: (name, ...args) => { calls.push({ kind: 'slot', name, args }); return null; },
     t: key => key,
   };
+  if (legacy) {
+    delete props.useContextMenu;
+    delete props.useContextMenuTarget;
+    delete props.openSessionMenu;
+  }
+  if (!accessHook) delete props.useSessionAccess;
   const row = nodes(browser(props)).find(node => node.type.name === 'InboxRow');
   assert.ok(row, 'session row must render');
-  const tree = row.type(row.props);
+  let tree = row.type(row.props);
+  while (typeof tree.type === 'function') tree = tree.type(tree.props);
   return { calls, tree, anchor: tree.props.anchor,
     menu: nodes(tree.props.anchor).find(node => node.props.className === 'dsi-icon-button'),
     title: nodes(tree.props.anchor).find(node => node.props.className === 'dsi-title') };
@@ -82,4 +89,23 @@ test('blank rows do not expose a session menu, and rename honors current native 
   const allowed = rowFixture();
   allowed.title.props.onDoubleClick({ stopPropagation() {} });
   assert.deepEqual(allowed.calls.find(call => call.kind === 'rename').args, ['chat', 'Session']);
+});
+
+test('legacy rows retain native menu entries and their open-state hook context', () => {
+  const fixture = rowFixture({ legacy: true });
+  const entry = fixture.calls.find(call => call.name === 'sidebar.workspaces.session.menu.item');
+  assert.equal(entry.args[0].sessionId, 'chat');
+  assert.equal(entry.args[0].displayTitle, 'Session');
+  assert.equal(entry.args[1].hookContext[0], false);
+  assert.equal(typeof entry.args[1].hookContext[1], 'function');
+  for (const [handler, event] of [['onContextMenu', {}], ['onKeyDown', { key: 'F10', shiftKey: true }]]) {
+    let prevented = false;
+    fixture.anchor.props[handler]({ ...event, currentTarget: { querySelector: () => null },
+      preventDefault() { prevented = true; }, stopPropagation() {} });
+    assert.equal(prevented, true);
+    assert.equal(fixture.calls.at(-1).next, true);
+  }
+  assert.equal(rowFixture({ legacy: true, blank: true }).anchor.props.onContextMenu, undefined);
+  assert.equal(rowFixture({ legacy: true, renamable: false }).title.props.onDoubleClick, undefined);
+  assert.equal(typeof rowFixture({ legacy: true, accessHook: false }).title.props.onDoubleClick, 'function');
 });

@@ -10,6 +10,7 @@ const currentSidebarCss = [...sidebar.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\
   .map(match => JSON.parse(match[1])).find(css => css.includes('.hHd-Xa_root'));
 const windowsSidebarCss = fs.readFileSync(new URL('./fixtures/sidebar-windows-0.2.1-rc.5.css', import.meta.url), 'utf8');
 const nativeSheets = ['WorkspaceBrowser', 'Rows', 'WorkspacePicker'];
+const versions = JSON.parse(fs.readFileSync(new URL('../compatibility.json', import.meta.url), 'utf8')).dshVersions;
 
 /** Both native compatibility CSS and the compact shell belong to this plugin.
  * Reloading the shell may replace only its own sheet, never the native fallback. */
@@ -114,14 +115,14 @@ test('another plugin cannot supply the native sidebar class map', () => {
   assert.throws(() => fixture.start(), /one loaded native SidebarRoot stylesheet/);
 });
 
-test('the published browser bundle retains all three 0.2.2-rc.1 native CSS payloads byte-for-byte', () => {
-  const upstream = fs.readFileSync(new URL('../vendor/workspace-client-0.2.2-rc.1.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+for (const version of [...versions, '0.2.2-rc.1+desktop.1']) test(`${version} selects only its own native adapter and fallback styles`, () => {
+  const upstream = fs.readFileSync(new URL(`../vendor/workspace-client-${version.split('+')[0]}.js`, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
   const expected = [...upstream.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\.|[^"\\])*");$/gm)]
     .map(match => JSON.parse(match[1]));
   const styles = [];
   let factory;
   vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), {
-    window: { __ModuleLoader__: { load(module) { factory = module.factory; } } },
+    window: { __DSH_SESSION_INBOX_HOST__: { version }, __ModuleLoader__: { load(module) { factory = module.factory; } } },
     document: { querySelector: () => null, createElement: () => ({ dataset: {} }),
       head: { appendChild(style) { styles.push(style); } } },
   });
@@ -131,10 +132,35 @@ test('the published browser bundle retains all three 0.2.2-rc.1 native CSS paylo
     return {};
   });
   assert.equal(typeof exports.apply, 'function');
-  assert.ok(exports.inject.includes('contextMenus'), 'new workspace menu service must be injected');
+  assert.equal(exports.inject.includes('contextMenus'), upstream.includes('"contextMenus"'), 'menu dependencies must follow this host');
   const manifest = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   assert.ok(manifest.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-context-menu'));
-  assert.equal(expected.length, 3);
+  const expectedIds = [...upstream.matchAll(/^\s*const tagId(?:\$\d+)? = ("(?:\\.|[^"\\])*");$/gm)]
+    .map(match => JSON.parse(match[1]).replace('@deepseek-ai/dsh-client-ui-workspace', 'dsh-session-inbox'));
+  assert.ok(expected.length >= 3);
+  assert.equal(expectedIds.length, expected.length);
   assert.deepEqual(styles.map(style => style.textContent), expected);
-  assert.deepEqual(styles.map(style => style.dataset.pluginCss), nativeSheets.map(name => `dsh-session-inbox/${name}.module.css`));
+  assert.deepEqual(styles.map(style => style.dataset.pluginCss), expectedIds);
+});
+
+test('unknown hosts fail before loading a native adapter or injecting CSS', () => {
+  const compiled = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
+  for (const version of [undefined, '0.2.2-rc.2', '0.3.0']) {
+    let factory;
+    vm.runInNewContext(compiled, {
+      window: { __DSH_SESSION_INBOX_HOST__: { version }, __ModuleLoader__: { load(module) { factory = module.factory; } } },
+    });
+    assert.throws(() => factory(() => { throw new Error('must not import native code'); }), /Unsupported DSH version/);
+  }
+});
+
+for (const version of versions) test(`${version} resolves the actual sidebar stylesheet, including older optional wrappers`, () => {
+  const original = fs.readFileSync(new URL(`../vendor/sidebar-client-${version}.js`, import.meta.url), 'utf8');
+  const css = [...original.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\.|[^"\\])*");$/gm)]
+    .map(match => JSON.parse(match[1])).find(value => /\.[\w-]+_root(?![\w-])/.test(value));
+  const fixture = shellFixture(css);
+  fixture.start();
+  const installed = fixture.styles.find(style => style.dataset.inboxShell === 'dsh-session-inbox').textContent;
+  assert.ok(!installed.includes('.dsi-shell-'));
+  assert.equal(fixture.document.documentElement.dataset.inboxMode, 'inbox');
 });
