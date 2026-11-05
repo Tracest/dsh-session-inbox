@@ -2,18 +2,25 @@
 
 [简体中文](README.zh-CN.md) · [MIT license](LICENSE)
 
-A compact session sidebar for **DeepSeek Harness 0.2.1-rc.5**. Group conversations
+A compact session sidebar for **DeepSeek Harness 0.2.2-rc.1**. Group conversations
 by project when needed, review completed or actionable chats in an **untitled
 upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
-The current workbench labels are Chinese. macOS Desktop is the original verified
-platform. Version `0.4.2` carries the unchanged Windows fix from `0.4.1+windows.1`;
-that build passed Windows Desktop cold-start,
+The current workbench labels are Chinese. Version `0.4.3` updates the native
+workspace adapter and context-menu integration for DSH `0.2.2-rc.1`. Automated
+checks use the official runtime in an isolated Windows Web profile: installation,
+startup, native menus (button, right click and Shift+F10), search, Settle/restore,
+and layout switching at 1280×820 and 1471×1200. The menu/list checks use an empty
+test session presented as nonblank by a browser-only fixture; no model API runs.
+Desktop, macOS, Linux, mobile, live model turns and arbitrary third-party plugin
+combinations on this new DSH version remain unverified.
+
+For DSH `0.2.1-rc.5`, keep plugin `0.4.2`. Its original macOS Desktop checks and
+the Windows fix inherited from `0.4.1+windows.1` covered Windows Desktop cold-start,
 compact-grid, and original-layout checks at 1280×820 and 1471×1200, plus search,
 project filtering and native session-menu checks on DSH `0.2.1-rc.5`.
-Linux desktop geometry and arbitrary third-party plugin combinations remain unverified.
-The same browser component can load in `dsh web`.
+Those earlier checks do not establish Desktop compatibility with DSH `0.2.2-rc.1`.
 
 <img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">
 
@@ -52,7 +59,7 @@ and local Settle records use the same storage key and remain available.
 
 ## Discover index
 
-On DSH 0.2.1, enable the experimental **Custom plugin markets** bundle, then
+On DSH 0.2.2, enable the experimental **Custom plugin indexes** bundle, then
 add this URL in **Plugins → Discover → Add index source**:
 
 ```text
@@ -181,8 +188,10 @@ layout switching, and cold starts. That evidence does not establish universal
 third-party or cross-platform support.
 Search expansion, literal highlighting, pending priority, completion acknowledgement,
 backup validation and merge preservation have additional regression checks.
-The native fallback's four CSS payloads and stylesheet lifecycle are also checked,
+The native fallback's three CSS payloads and stylesheet lifecycle are also checked,
 including switching modes and disposing a replaced UI module.
+The adapter uses the native context-menu service for the row menu, right click
+and Shift+F10, and checks native access before enabling title double-click rename.
 
 ## Attribution
 

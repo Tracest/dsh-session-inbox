@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 // Git may check these text inputs out as CRLF on Windows; the generated bundle stays byte-stable.
 const read = path => fs.readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-const version = JSON.parse(read('./package.json')).version;
+const { version, engines: { dsh: dshVersion } } = JSON.parse(read('./package.json'));
 function replaceOnce(source, marker, replacement) {
   if (source.split(marker).length !== 2) throw new Error(`Unsupported DSH client: ambiguous or missing hook ${marker}`);
   return source.replace(marker, replacement);
@@ -18,8 +18,8 @@ function factoryBody(source) {
 }
 
 const originals = {
-  workspace: read('./vendor/workspace-client-0.2.1-rc.5.js'),
-  sidebar: read('./vendor/sidebar-client-0.2.1-rc.5.js'),
+  workspace: read(`./vendor/workspace-client-${dshVersion}.js`),
+  sidebar: read(`./vendor/sidebar-client-${dshVersion}.js`),
 };
 let workspace = factoryBody(originals.workspace).replaceAll('@deepseek-ai/dsh-client-ui-workspace', 'dsh-session-inbox');
 workspace = replaceOnce(workspace, '}, WorkspaceBrowser));', '}, createInboxBrowser(WorkspaceBrowser, ctx)));');
@@ -51,7 +51,7 @@ fs.mkdirSync(new URL('./lib', import.meta.url), { recursive: true });
 fs.writeFileSync(new URL('./lib/client.js', import.meta.url), compiled);
 fs.writeFileSync(new URL('./lib/index.js', import.meta.url), '// Browser-only UI replacement.\nexport function apply() {}\n');
 fs.writeFileSync(new URL('./lib/build-info.json', import.meta.url), JSON.stringify({
-  version, dshVersion: '0.2.1-rc.5',
+  version, dshVersion,
   upstreamSha256: Object.fromEntries(Object.entries(originals).map(([key, source]) => [key, crypto.createHash('sha256').update(source).digest('hex')])),
 }, null, 2) + '\n');
 console.log(`Built DSH session workbench ${version} with native workspace navigation and scoped sidebar styles.`);

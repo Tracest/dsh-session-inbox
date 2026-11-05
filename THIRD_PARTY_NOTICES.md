@@ -1,12 +1,14 @@
 # Third-party notices
 
 This project is MIT licensed. Its compatibility adapter includes the MIT-licensed
-DeepSeek Harness workspace browser for **0.2.1-rc.5**. The original copyright and
+DeepSeek Harness workspace browser for **0.2.2-rc.1**. The original copyright and
 license are retained in [vendor/LICENSE.deepseek](vendor/LICENSE.deepseek).
 
 - Upstream: <https://github.com/deepseek-ai/deepseek-harness>
-- Vendored artifacts: `vendor/workspace-client-0.2.1-rc.5.js` and
-  `vendor/sidebar-client-0.2.1-rc.5.js`.
+- Vendored artifacts: `vendor/workspace-client-0.2.2-rc.1.js` and
+  `vendor/sidebar-client-0.2.2-rc.1.js`, taken from the official npm packages
+  `@deepseek-ai/dsh-client-ui-workspace@0.2.2-rc.1` and
+  `@deepseek-ai/dsh-client-ui-sidebar@0.2.2-rc.1`.
 - `lib/client.js` contains the workspace adapter. `build.mjs` records the SHA-256
   of both original artifacts in `lib/build-info.json`.
 - Compact styles resolve the class map from the active official sidebar's own

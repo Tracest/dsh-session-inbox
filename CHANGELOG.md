@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.3 — 2026-11-05
+
+- Adapt to DSH `0.2.2-rc.1` using its published native workspace and sidebar
+  artifacts, retaining the exact engine guard. DSH `0.2.1-rc.5` users keep `0.4.2`.
+- Route session menus, right click and Shift+F10 through the new native
+  context-menu service so built-in actions and extension entries remain available.
+- Honor native rename permissions on title double-click, and keep blank-session
+  menu actions disabled.
+- Use the package engine requirement in the builder and optional local installer
+  to prevent version checks from drifting apart. Rebuild the checked-in bundle
+  and update regression coverage for the current native styles and menu contract.
+- Preserve the existing list-state storage key and backup format.
+
 ## 0.4.2 — 2026-11-03
 
 - Carry the Windows sidebar fix from `0.4.1+windows.1` under a normal patch version.

@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 SOURCE = Path(__file__).resolve().parent
 MARKER = '# dsh-session-inbox managed section'
 END = '# end dsh-session-inbox managed section'
-SUPPORTED_DSH = '0.2.1-rc.5'
+# This adapter intentionally targets one exact DSH version, shared with the bundle.
+SUPPORTED_DSH = json.loads((SOURCE / 'package.json').read_text(encoding='utf-8'))['engines']['dsh']
 
 
 def replace_managed_section(text: str, section: str) -> str:

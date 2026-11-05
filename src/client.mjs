@@ -20,10 +20,11 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       ? h('mark', { key: index }, piece.text) : piece.text);
   }
 
-  /** Keep the original menu seats and occurrence-local menu hook, rather than copying their actions. */
+  /** Use the native context-menu service so built-in actions and extension seats share one owner. */
   function InboxRow({ row, category, currentId, state, clock, query, blocked, native, onOpen, onSettle, onRestore }) {
-    const [menuOpen, setMenuOpen] = react.useState(false);
-    const menuOpenState = react.useMemo(() => [menuOpen, setMenuOpen], [menuOpen]);
+    const { getTriggerProps } = native.useContextMenu();
+    const menuOpen = native.useContextMenuTarget(target => target?.kind === 'session' && target.value.sessionId === row.id);
+    const renamable = native.useSessionAccess(row.id, 'session/rename');
     const pendingText = { approval: '等待审批', question: '等待回答', 'plan-review': '等待审阅' }[row.pending];
     const statusText = row.pending ? pendingText || '等待处理' : row.running ? '正在工作' : row.completionUnread ? '有新结果' : '';
     const detail = [(!state.groupByProject || category !== 'active') && row.projectTitle,
@@ -34,12 +35,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       pendingInteraction: row.pending ?? undefined, runningSubagentCount: row.runningSubagentCount };
     const anchor = h('div', { role: 'treeitem', className: `dsi-row${statusClass}${menuOpen ? ' dsi-menu-open' : ''}`,
       'aria-selected': currentId === row.id, 'data-inbox-session-id': row.id, 'data-inbox-category': category,
-      onContextMenu: event => { event.preventDefault(); setMenuOpen(true); },
-      onKeyDown: event => {
-        if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
-          event.preventDefault(); event.stopPropagation(); setMenuOpen(true);
-        }
-      } },
+      ...getTriggerProps(row.blank ? undefined : { kind: 'session', value: { sessionId: row.id, displayTitle: row.title } }) },
       h('button', { type: 'button', className: 'dsi-open',
         'aria-keyshortcuts': 'Enter Shift+Enter',
         'aria-label': `${row.archived ? '恢复并打开' : '打开会话'}：${row.title}${statusText ? `，${statusText}` : ''}`,
@@ -47,22 +43,21 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         h('span', { className: 'dsi-dot', 'aria-hidden': true }, showStatus ? row.pending ? '!' : ''
           : !row.archived && !row.blank && native.renderSlot('sidebar.session.row.leading', { sessionId: row.id })),
         h('span', { className: 'dsi-row-copy' }, h('span', { className: 'dsi-title',
-          onDoubleClick: row.blank ? undefined : event => { event.stopPropagation(); native.requestSessionRename(row.id, row.title); } },
+          onDoubleClick: row.blank || !renamable ? undefined : event => { event.stopPropagation(); native.requestSessionRename(row.id, row.title); } },
           highlight(row.title, query)), detail && h('span', { className: 'dsi-detail' }, highlight(detail, query))),
         row.pinned && h('span', { className: 'dsi-pin', title: '已置顶', 'aria-label': '已置顶' },
           h(_deepseek_ai_dsh_client_ui_primitives.IconPinFillRegular, { size: 11 }))),
       h('span', { className: 'dsi-row-end' },
         h('time', { className: 'dsi-time', title: row.updatedAt ? new Date(row.updatedAt).toLocaleString('zh-CN') : undefined }, inboxRelativeTime(row.updatedAt, clock)),
         h('span', { className: 'dsi-row-actions' },
-          h(_deepseek_ai_dsh_client_ui_primitives.Menu, { open: menuOpen, onClose: () => setMenuOpen(false), portal: true,
-            anchor: h('button', { type: 'button', className: 'dsi-icon-button',
+          h('button', { type: 'button', className: 'dsi-icon-button', disabled: row.blank,
               'aria-label': `会话操作：${row.title}`, 'aria-haspopup': 'menu', 'aria-expanded': menuOpen,
-              onClick: () => setMenuOpen(value => !value) },
-              h(_deepseek_ai_dsh_client_ui_primitives.IconEllipsisOutlineRegular, { size: 15 })),
-            children: native.renderSlot('sidebar.workspaces.session.menu.item', {
-              sessionId: row.id, displayTitle: row.title,
-            }, { hookContext: menuOpenState }),
-          }),
+              'data-context-menu-trigger': '', onPointerDown: event => event.stopPropagation(),
+              onClick: event => {
+                event.currentTarget.focus({ preventScroll: true });
+                const rect = event.currentTarget.getBoundingClientRect();
+                native.openSessionMenu(row.id, row.title, { x: rect.left, y: rect.bottom }, 'toggle');
+              } }, h(_deepseek_ai_dsh_client_ui_primitives.IconEllipsisOutlineRegular, { size: 15 })),
           category === 'settled' ? h('button', { type: 'button', className: 'dsi-row-action',
             'aria-label': `恢复会话：${row.title}`, title: '恢复到上方列表（Shift+Enter）', onClick: () => onRestore(row.id) }, '↶')
             : h('button', { type: 'button', className: 'dsi-row-action', disabled: blocked,

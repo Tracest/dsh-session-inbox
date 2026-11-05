@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-inbox",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A compact DSH session workbench with native menus, search, keyboard navigation, unread results, portable list backups, and reversible Working/Settled organization.",
   "type": "module",
   "main": "./lib/index.js",
@@ -42,7 +42,8 @@
         "@deepseek-ai/dsh-client-ui-layout",
         "@deepseek-ai/dsh-client-ui-renderer",
         "@deepseek-ai/dsh-client-ui-session",
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-context-menu"
       ]
     },
     "bundle": {
@@ -51,7 +52,7 @@
   },
   "engines": {
     "node": ">=20",
-    "dsh": "0.2.1-rc.5"
+    "dsh": "0.2.2-rc.1"
   },
   "license": "MIT",
   "author": "Tracest",

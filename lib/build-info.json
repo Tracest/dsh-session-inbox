@@ -1,8 +1,8 @@
 {
-  "version": "0.4.2",
-  "dshVersion": "0.2.1-rc.5",
+  "version": "0.4.3",
+  "dshVersion": "0.2.2-rc.1",
   "upstreamSha256": {
-    "workspace": "ea4e8374efef652aa917122be1422047ef012b68513421195dec31f79ee0543a",
-    "sidebar": "e1421cbd77f3747da92544aa857ab1e7f832f1eb44ba5b10518370b854cf4c55"
+    "workspace": "bb31f7870381f737b2cb45db4c7911a08a4949856bc86b648a10d3e85a3e9f89",
+    "sidebar": "0a0a32382391acee1a692cf7d2529a2669cc8cc23d4d83b446f6247c3c4562c4"
   }
 }

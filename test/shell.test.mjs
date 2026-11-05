@@ -5,15 +5,15 @@ import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../src/shell.mjs', import.meta.url), 'utf8');
 const template = fs.readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
-const sidebar = fs.readFileSync(new URL('../vendor/sidebar-client-0.2.1-rc.5.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-const macSidebarCss = [...sidebar.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\.|[^"\\])*");$/gm)]
-  .map(match => JSON.parse(match[1])).find(css => css.includes('.kB3qhq_root'));
+const sidebar = fs.readFileSync(new URL('../vendor/sidebar-client-0.2.2-rc.1.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const currentSidebarCss = [...sidebar.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\.|[^"\\])*");$/gm)]
+  .map(match => JSON.parse(match[1])).find(css => css.includes('.hHd-Xa_root'));
 const windowsSidebarCss = fs.readFileSync(new URL('./fixtures/sidebar-windows-0.2.1-rc.5.css', import.meta.url), 'utf8');
-const nativeSheets = ['Rows', 'AnimatedRows', 'WorkspacePicker', 'WorkspaceBrowser'];
+const nativeSheets = ['WorkspaceBrowser', 'Rows', 'WorkspacePicker'];
 
 /** Both native compatibility CSS and the compact shell belong to this plugin.
  * Reloading the shell may replace only its own sheet, never the native fallback. */
-function shellFixture(sidebarCss = macSidebarCss) {
+function shellFixture(sidebarCss = currentSidebarCss) {
   const styles = [];
   const listeners = new Set();
   const mode = { value: 'inbox' };
@@ -84,7 +84,7 @@ test('disposing a stale shell after replacement cannot remove the current mode o
   assert.deepEqual(fixture.styles, original);
 });
 
-for (const [platform, css, prefix] of [['macOS', macSidebarCss, 'kB3qhq'], ['Windows', windowsSidebarCss, 'wtg9ga']]) {
+for (const [platform, css, prefix] of [['0.2.2-rc.1 npm', currentSidebarCss, 'hHd-Xa'], ['0.2.1-rc.5 Windows fixture', windowsSidebarCss, 'wtg9ga']]) {
   test(`${platform} compact selectors use the loaded official sidebar hashes`, () => {
     const fixture = shellFixture(css);
     const dispose = fixture.start();
@@ -93,7 +93,7 @@ for (const [platform, css, prefix] of [['macOS', macSidebarCss, 'kB3qhq'], ['Win
     assert.ok(actual.includes(`.${prefix}_panelList{grid-area:nav;display:grid;`));
     assert.ok(actual.includes(`.${prefix}_regionArea{grid-area:region;`));
     assert.ok(!actual.includes('.dsi-shell-'), 'unresolved shell alias');
-    assert.ok(!actual.includes(`.${platform === 'Windows' ? 'kB3qhq' : 'wtg9ga'}_root`));
+    assert.ok(!actual.includes(`.${prefix === 'wtg9ga' ? 'hHd-Xa' : 'wtg9ga'}_root`));
     dispose();
   });
 }
@@ -114,8 +114,8 @@ test('another plugin cannot supply the native sidebar class map', () => {
   assert.throws(() => fixture.start(), /one loaded native SidebarRoot stylesheet/);
 });
 
-test('the published browser bundle retains all four original native CSS payloads byte-for-byte', () => {
-  const upstream = fs.readFileSync(new URL('../vendor/workspace-client-0.2.1-rc.5.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+test('the published browser bundle retains all three 0.2.2-rc.1 native CSS payloads byte-for-byte', () => {
+  const upstream = fs.readFileSync(new URL('../vendor/workspace-client-0.2.2-rc.1.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
   const expected = [...upstream.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\.|[^"\\])*");$/gm)]
     .map(match => JSON.parse(match[1]));
   const styles = [];
@@ -131,7 +131,10 @@ test('the published browser bundle retains all four original native CSS payloads
     return {};
   });
   assert.equal(typeof exports.apply, 'function');
-  assert.equal(expected.length, 4);
+  assert.ok(exports.inject.includes('contextMenus'), 'new workspace menu service must be injected');
+  const manifest = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.ok(manifest.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-context-menu'));
+  assert.equal(expected.length, 3);
   assert.deepEqual(styles.map(style => style.textContent), expected);
   assert.deepEqual(styles.map(style => style.dataset.pluginCss), nativeSheets.map(name => `dsh-session-inbox/${name}.module.css`));
 });
