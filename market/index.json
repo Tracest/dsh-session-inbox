@@ -16,8 +16,8 @@
         "zh": "DSH 会话工作台"
       },
       "description": {
-        "en": "Compact session workbench with rounded monochrome icons, a floating Undo notice, lower Working/Settled shelves, native menus, search, keyboard navigation, metadata backups and an original-layout switch. Chinese UI. Version 0.4.4 targets DSH 0.2.2-rc.1. Isolated Windows Web checks cover startup, menus, Settle/restore, toast timing and layout switching with test session fixtures; no model API calls. Desktop interactions, macOS, Linux, mobile, live model turns and arbitrary third-party combinations remain unverified. Version 0.4.2 remains available for DSH 0.2.1-rc.5.",
-        "zh": "圆角单色图标与底部浮动撤销提示，上方直接查看会话，下方收纳工作中和已整理；支持原生菜单、搜索、键盘操作、整理备份和原布局切换。中文界面。0.4.4 适配 DSH 0.2.2-rc.1，已用测试会话夹具在 Windows 隔离 Web 环境验证启动、菜单、整理/恢复、提示计时及布局切换，未调用模型 API。桌面交互、macOS、Linux、手机、真实模型对话及任意第三方插件组合仍未验收。DSH 0.2.1-rc.5 可继续使用 0.4.2。"
+        "en": "Compact session workbench with rounded monochrome icons, floating Undo, native menus, search, keyboard navigation, metadata backups and an original-layout switch. Chinese UI. Version 0.4.5 supports 16 exact DSH releases: 0.1.7-rc.1/rc.2, 0.2.0-rc.1/rc.2, 0.2.1-alpha.1–alpha.5/rc.1–rc.5, 0.2.2-alpha.3/rc.1. All passed 13 isolated Windows Web checks each (208 total), plus 81 code/installer tests. Empty test sessions use a browser presentation fixture; no model API calls. Excludes 0.2.2-alpha.2 after native startup/session failures. Other platforms, live model turns and arbitrary third-party combinations remain unverified.",
+        "zh": "圆角单色图标、底部浮动撤销、原生菜单、搜索、键盘操作、整理备份与原布局切换。中文界面。0.4.5 支持 16 个明确版本：0.1.7-rc.1/rc.2、0.2.0-rc.1/rc.2、0.2.1-alpha.1～alpha.5/rc.1～rc.5、0.2.2-alpha.3/rc.1。每版通过 13 项 Windows 隔离 Web 检查（共 208 项），另通过 81 项代码和安装器测试。空测试会话由浏览器夹具呈现为非空，未调用模型 API。0.2.2-alpha.2 因原生启动/创建会话失败未纳入。其他平台、真实模型对话与任意第三方插件组合仍未验收。"
       },
       "author": "Tracest",
       "homepage": "https://github.com/Tracest/dsh-session-inbox",
@@ -26,6 +26,18 @@
       },
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxODAiIHJ4PSI0MCIgZmlsbD0iIzE3MjAzMyIvPgogIDxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjExNiIgaGVpZ2h0PSIxMTYiIHJ4PSIxNyIgc3Ryb2tlPSIjRDlFNEZBIiBzdHJva2Utd2lkdGg9IjgiLz4KICA8cGF0aCBkPSJNNzAgMzZWMTQ0IiBzdHJva2U9IiNEOUU0RkEiIHN0cm9rZS13aWR0aD0iNyIvPgogIDxwYXRoIGQ9Ik00NSA1N0g1N000NSA3OEg1N000NSA5OUg1NyIgc3Ryb2tlPSIjQTVCRkYyIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik04OSA5M0wxMDQgMTA4TDEzMCA3NiIgc3Ryb2tlPSIjODZFM0MxIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K",
       "versions": [
+        {
+          "version": "0.4.5",
+          "publishTimestamp": 1793878285,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Tracest/dsh-session-inbox",
+            "commit": "7d6063962e6fd08c02ec25b834298eeb524d10af"
+          },
+          "engines": {
+            "dsh": "0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2 || 0.2.1-alpha.1 || 0.2.1-alpha.2 || 0.2.1-alpha.3 || 0.2.1-alpha.4 || 0.2.1-alpha.5 || 0.2.1-rc.1 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.4 || 0.2.1-rc.5 || 0.2.2-alpha.3 || 0.2.2-rc.1"
+          }
+        },
         {
           "version": "0.4.4",
           "publishTimestamp": 1793871764,
