@@ -16,8 +16,8 @@
         "zh": "DSH 会话工作台"
       },
       "description": {
-        "en": "Compact top tools, untitled review inbox, lower Working/Settled shelves, native menus, search, keyboard navigation, metadata backups and an original-layout switch. Chinese UI. Version 0.4.3 targets DSH 0.2.2-rc.1; isolated Windows Web checks cover installation, startup, menus, search, Settle/restore and layout switching with a test session fixture. Desktop, macOS, Linux, mobile, live model turns and third-party combinations on this DSH version remain unverified. Version 0.4.2 remains available for DSH 0.2.1-rc.5.",
-        "zh": "顶部工具区与原布局切换，上方直接查看会话，下方收纳工作中和已整理；支持原生菜单、搜索高亮、键盘操作及整理备份。中文界面。0.4.3 适配 DSH 0.2.2-rc.1，已用测试会话夹具在 Windows 隔离 Web 环境验证安装、启动、菜单、搜索、整理/恢复及布局切换。新版 DSH 下的桌面版、macOS、Linux、手机、真实模型对话与第三方插件组合仍未验收。DSH 0.2.1-rc.5 可继续使用 0.4.2。"
+        "en": "Compact session workbench with rounded monochrome icons, a floating Undo notice, lower Working/Settled shelves, native menus, search, keyboard navigation, metadata backups and an original-layout switch. Chinese UI. Version 0.4.4 targets DSH 0.2.2-rc.1. Isolated Windows Web checks cover startup, menus, Settle/restore, toast timing and layout switching with test session fixtures; no model API calls. Desktop interactions, macOS, Linux, mobile, live model turns and arbitrary third-party combinations remain unverified. Version 0.4.2 remains available for DSH 0.2.1-rc.5.",
+        "zh": "圆角单色图标与底部浮动撤销提示，上方直接查看会话，下方收纳工作中和已整理；支持原生菜单、搜索、键盘操作、整理备份和原布局切换。中文界面。0.4.4 适配 DSH 0.2.2-rc.1，已用测试会话夹具在 Windows 隔离 Web 环境验证启动、菜单、整理/恢复、提示计时及布局切换，未调用模型 API。桌面交互、macOS、Linux、手机、真实模型对话及任意第三方插件组合仍未验收。DSH 0.2.1-rc.5 可继续使用 0.4.2。"
       },
       "author": "Tracest",
       "homepage": "https://github.com/Tracest/dsh-session-inbox",
@@ -26,6 +26,18 @@
       },
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxODAiIHJ4PSI0MCIgZmlsbD0iIzE3MjAzMyIvPgogIDxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjExNiIgaGVpZ2h0PSIxMTYiIHJ4PSIxNyIgc3Ryb2tlPSIjRDlFNEZBIiBzdHJva2Utd2lkdGg9IjgiLz4KICA8cGF0aCBkPSJNNzAgMzZWMTQ0IiBzdHJva2U9IiNEOUU0RkEiIHN0cm9rZS13aWR0aD0iNyIvPgogIDxwYXRoIGQ9Ik00NSA1N0g1N000NSA3OEg1N000NSA5OUg1NyIgc3Ryb2tlPSIjQTVCRkYyIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik04OSA5M0wxMDQgMTA4TDEzMCA3NiIgc3Ryb2tlPSIjODZFM0MxIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K",
       "versions": [
+        {
+          "version": "0.4.4",
+          "publishTimestamp": 1793871764,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Tracest/dsh-session-inbox",
+            "commit": "0523c043d5d54c99aac39e87bc6c239b44323dbb"
+          },
+          "engines": {
+            "dsh": "0.2.2-rc.1"
+          }
+        },
         {
           "version": "0.4.3",
           "publishTimestamp": 1793869271,
