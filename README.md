@@ -7,11 +7,15 @@ by project when needed, review completed or actionable chats in an **untitled
 upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
-The current workbench labels are Chinese. Version `0.4.3` updates the native
+The current workbench labels are Chinese. Version `0.4.4` adds consistent rounded
+monochrome icons and a bottom floating Undo notice. It expires after five seconds,
+pauses while hovered or focused, and does not shift the list. The `0.4.3` release updated the native
 workspace adapter and context-menu integration for DSH `0.2.2-rc.1`. Automated
 checks use the official runtime in an isolated Windows Web profile: installation,
 startup, native menus (button, right click and Shift+F10), search, Settle/restore,
-and layout switching at 1280×820 and 1471×1200. The menu/list checks use an empty
+and layout switching at 1280×820 and 1471×1200. Version `0.4.4` also checks notice
+timing, hover/focus pauses, consecutive actions, Undo, and keyboard dismissal.
+The menu/list checks use empty
 test session presented as nonblank by a browser-only fixture; no model API runs.
 Desktop, macOS, Linux, mobile, live model turns and arbitrary third-party plugin
 combinations on this new DSH version remain unverified.

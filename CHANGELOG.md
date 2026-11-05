@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.4 — 2026-11-05
+
+- Give workbench controls a consistent Claude-inspired appearance with small,
+  rounded, monochrome SVG icons and subtle warm-gray hover backgrounds. Keep
+  the existing Settle, restore, native menu and keyboard actions.
+- Move transient notices into a bottom floating toast without shifting the
+  session list. Keep Settle feedback short, with Undo and an accessible close
+  button; Escape dismisses a focused toast.
+- Dismiss notices after five seconds of unpaused time. Hover and keyboard focus
+  pause the countdown; a new action resets it and replaces the undo target.
+- Retain the DSH `0.2.2-rc.1` engine guard, existing storage key and backup format.
+
 ## 0.4.3 — 2026-11-05
 
 - Adapt to DSH `0.2.2-rc.1` using its published native workspace and sidebar

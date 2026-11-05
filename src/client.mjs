@@ -3,6 +3,63 @@ function createInboxBrowser(OriginalBrowser, ctx) {
   const h = react.createElement;
   const labels = { working: '工作中', settled: '已整理' };
 
+  /** One quiet, rounded outline set for the workbench's own controls. */
+  function InboxIcon({ name }) {
+    const paths = {
+      check: 'm5 12 4.5 4.5L19 7',
+      restore: 'm9 5-5 5 5 5M4 10h9a6 6 0 0 1 0 12',
+      search: 'm16.5 16.5 4 4',
+      folder: 'M3 7.5V6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5Z',
+      close: 'm6 6 12 12M18 6 6 18',
+      chevronRight: 'm9 6 6 6-6 6',
+      chevronDown: 'm6 9 6 6 6-6',
+      pin: 'm15 3 6 6-4 1-3 5v4l-9-9h4l5-3 1-4ZM9 15l-5 5',
+    };
+    return h('svg', { className: 'dsi-icon', 'data-inbox-icon': name, width: 16, height: 16,
+      viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5,
+      strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, focusable: false },
+      name === 'more' ? [6, 12, 18].map(cx => h('circle', { key: cx, cx, cy: 12, r: 1, fill: 'currentColor', stroke: 'none' }))
+        : h('path', { d: paths[name] }),
+      name === 'search' && h('circle', { cx: 10.5, cy: 10.5, r: 6.5 }));
+  }
+
+  /** Transient feedback never takes space away from the session list. */
+  function InboxToast({ notice, onDismiss, onUndo }) {
+    const [hovered, setHovered] = react.useState(false);
+    const [focused, setFocused] = react.useState(false);
+    const [closing, setClosing] = react.useState(false);
+    const remaining = react.useRef(5000);
+    const paused = hovered || focused;
+    react.useEffect(() => {
+      remaining.current = 5000;
+      setClosing(false);
+    }, [notice]);
+    react.useEffect(() => {
+      if (paused || closing) return;
+      const started = performance.now();
+      const timer = setTimeout(() => setClosing(true), remaining.current);
+      return () => {
+        clearTimeout(timer);
+        remaining.current = Math.max(0, remaining.current - (performance.now() - started));
+      };
+    }, [notice, paused, closing]);
+    react.useEffect(() => {
+      if (!closing) return;
+      const timer = setTimeout(onDismiss, 160);
+      return () => clearTimeout(timer);
+    }, [notice, closing, onDismiss]);
+    return h('div', { className: `dsi-toast${closing ? ' dsi-toast-closing' : ''}`, role: 'status',
+      'aria-atomic': true, title: notice.label,
+      onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false),
+      onFocus: () => setFocused(true),
+      onBlur: event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); },
+      onKeyDown: event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onDismiss(); } } },
+      notice.undoId && h(InboxIcon, { name: 'check' }),
+      h('span', { className: 'dsi-toast-message' }, notice.message),
+      notice.undoId && h('button', { type: 'button', className: 'dsi-toast-undo', onClick: onUndo }, '撤销'),
+      h('button', { type: 'button', className: 'dsi-toast-close', 'aria-label': '关闭通知', onClick: onDismiss }, h(InboxIcon, { name: 'close' })));
+  }
+
   class InboxBoundary extends react.Component {
     state = { failed: false };
     static getDerivedStateFromError() { return { failed: true }; }
@@ -46,7 +103,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
           onDoubleClick: row.blank || !renamable ? undefined : event => { event.stopPropagation(); native.requestSessionRename(row.id, row.title); } },
           highlight(row.title, query)), detail && h('span', { className: 'dsi-detail' }, highlight(detail, query))),
         row.pinned && h('span', { className: 'dsi-pin', title: '已置顶', 'aria-label': '已置顶' },
-          h(_deepseek_ai_dsh_client_ui_primitives.IconPinFillRegular, { size: 11 }))),
+          h(InboxIcon, { name: 'pin' }))),
       h('span', { className: 'dsi-row-end' },
         h('time', { className: 'dsi-time', title: row.updatedAt ? new Date(row.updatedAt).toLocaleString('zh-CN') : undefined }, inboxRelativeTime(row.updatedAt, clock)),
         h('span', { className: 'dsi-row-actions' },
@@ -57,12 +114,12 @@ function createInboxBrowser(OriginalBrowser, ctx) {
                 event.currentTarget.focus({ preventScroll: true });
                 const rect = event.currentTarget.getBoundingClientRect();
                 native.openSessionMenu(row.id, row.title, { x: rect.left, y: rect.bottom }, 'toggle');
-              } }, h(_deepseek_ai_dsh_client_ui_primitives.IconEllipsisOutlineRegular, { size: 15 })),
+              } }, h(InboxIcon, { name: 'more' })),
           category === 'settled' ? h('button', { type: 'button', className: 'dsi-row-action',
-            'aria-label': `恢复会话：${row.title}`, title: '恢复到上方列表（Shift+Enter）', onClick: () => onRestore(row.id) }, '↶')
+            'aria-label': `恢复会话：${row.title}`, title: '恢复到上方列表（Shift+Enter）', onClick: () => onRestore(row.id) }, h(InboxIcon, { name: 'restore' }))
             : h('button', { type: 'button', className: 'dsi-row-action', disabled: blocked,
               'aria-label': `Settle：${row.title}`, title: blocked ? '工作或等待回复结束后可整理' : 'Settle：整理到已整理，不删除记录（Shift+Enter）',
-              onClick: () => onSettle(row) }, '✓'))));
+              onClick: () => onSettle(row) }, h(InboxIcon, { name: 'check' })))));
     return h(_deepseek_ai_dsh_client_ui_primitives.HoverCard, { anchor, openDelayMs: 700, grouped: true, disabled: menuOpen,
       content: h('div', { className: 'dsi-hover' },
         h(SessionHoverContent, { node: hoverNode, now: clock, renderSlot: native.renderSlot, t: native.t }),
@@ -80,7 +137,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
     const [projectId, setProjectId] = react.useState('*');
     const [viewOptionsOpen, setViewOptionsOpen] = react.useState(false);
     const [notice, setNotice] = react.useState(null);
-    const [undo, setUndo] = react.useState(null);
+    const showNotice = react.useCallback((message, undoId = null, label = message) => setNotice({ message, undoId, label }), []);
+    const dismissNotice = react.useCallback(() => setNotice(null), []);
     const [metadataLoading, setMetadataLoading] = react.useState(0);
     const [metadataErrors, setMetadataErrors] = react.useState(0);
     const [refreshEpoch, setRefreshEpoch] = react.useState(0);
@@ -143,7 +201,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
           }
         }
       };
-      run().catch(error => { if (!cancelled) setNotice(`历史摘要读取失败：${error.message ?? error}`); });
+      run().catch(error => { if (!cancelled) showNotice(`历史摘要读取失败：${error.message ?? error}`); });
       return () => { cancelled = true; };
     }, [metadataKey, refreshEpoch, ctx]);
 
@@ -193,11 +251,6 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       if (record.error) return;
       if (inboxReconcile(state, rows) !== state) update(previous => inboxReconcile(previous, rows));
     }, [rows, state, record.error, update]);
-    react.useEffect(() => {
-      if (notice === null) return;
-      const timer = setTimeout(() => { setNotice(null); setUndo(null); }, 6000);
-      return () => clearTimeout(timer);
-    }, [notice]);
 
     const setMode = mode => {
       if (!update(previous => ({ ...previous, mode }))) {
@@ -216,7 +269,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       const hadFocus = rowElement?.contains(document.activeElement);
       const nextId = (buttons[index + 1] ?? buttons[index - 1])?.closest('[data-inbox-session-id]')?.dataset.inboxSessionId;
       if (update(previous => inboxSettle(previous, row))) {
-        setUndo(row.id); setNotice(`已整理“${row.title}”，聊天记录仍保留。`);
+        showNotice('已整理', row.id, `已整理“${row.title}”`);
         if (hadFocus) requestAnimationFrame(() => {
           const next = [...(rootRef.current?.querySelectorAll('[data-inbox-session-id]') ?? [])]
             .find(element => element.dataset.inboxSessionId === nextId)?.querySelector('.dsi-open');
@@ -228,7 +281,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       const element = [...(rootRef.current?.querySelectorAll('[data-inbox-session-id]') ?? [])]
         .find(row => row.dataset.inboxSessionId === id);
       const hadFocus = element?.contains(document.activeElement);
-      if (update(previous => inboxRestore(previous, id))) {
+      const restored = update(previous => inboxRestore(previous, id));
+      if (restored) {
         setReturnedAt(previous => ({ ...previous, [id]: Date.now() }));
         if (hadFocus) requestAnimationFrame(() => {
           const restored = [...(rootRef.current?.querySelectorAll('[data-inbox-session-id]') ?? [])]
@@ -236,11 +290,22 @@ function createInboxBrowser(OriginalBrowser, ctx) {
           (restored ?? searchRef.current)?.focus();
         });
       }
+      return restored;
+    };
+    const undoNotice = () => {
+      const id = notice?.undoId;
+      if (!id || !restore(id)) return;
+      dismissNotice();
+      requestAnimationFrame(() => {
+        const restored = [...(rootRef.current?.querySelectorAll('[data-inbox-session-id]') ?? [])]
+          .find(row => row.dataset.inboxSessionId === id)?.querySelector('.dsi-open');
+        (restored ?? searchRef.current)?.focus();
+      });
     };
     const open = row => {
       if (row.archived) {
         props.unarchiveSession(row.id).then(() => props.open(row.id))
-          .catch(error => setNotice(`无法恢复会话：${error.message ?? error}`));
+          .catch(error => showNotice(`无法恢复会话：${error.message ?? error}`));
       } else props.open(row.id);
     };
     const visible = inboxFilterRows(rows, query, projectId, state.includeArchived);
@@ -251,8 +316,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       setMetadataErrors(0);
       setRefreshEpoch(value => value + 1);
       ctx.sessions.refresh()
-        .then(() => setNotice('会话目录已刷新。'))
-        .catch(error => setNotice(`会话目录刷新失败：${error.message ?? error}`));
+        .then(() => showNotice('会话目录已刷新。'))
+        .catch(error => showNotice(`会话目录刷新失败：${error.message ?? error}`));
     };
 
     const exportBackup = () => {
@@ -264,8 +329,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         link.href = url; link.download = `dsh-workbench-backup-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(link); link.click(); link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 30_000);
-        setUndo(null); setNotice(`已生成 ${Object.keys(snapshot.settled).length} 条整理记录的备份。`);
-      } catch (error) { setNotice(`无法导出备份：${error.message ?? error}`); }
+        showNotice(`已生成 ${Object.keys(snapshot.settled).length} 条整理记录的备份。`);
+      } catch (error) { showNotice(`无法导出备份：${error.message ?? error}`); }
     };
     const readBackup = async event => {
       const file = event.target.files?.[0];
@@ -275,7 +340,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         if (file.size > INBOX_BACKUP_LIMIT) throw new Error('备份文件过大，最多支持 2 MB。');
         const backup = inboxParseBackup(await file.text());
         setRestorePreferences(false); setImportPreview({ ...backup, name: file.name });
-      } catch (error) { setUndo(null); setNotice(`无法读取备份：${error.message ?? error}`); }
+      } catch (error) { showNotice(`无法读取备份：${error.message ?? error}`); }
     };
     const mergeBackup = () => {
       if (!importPreview) return;
@@ -285,8 +350,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         count = Object.keys(merged.settled).length;
         return merged;
       })) {
-        setImportPreview(null); setUndo(null);
-        setNotice(`备份已合并，保留 ${count} 条整理记录；聊天和原生归档保持原样。`);
+        setImportPreview(null);
+        showNotice(`备份已合并，保留 ${count} 条整理记录；聊天和原生归档保持原样。`);
       }
     };
 
@@ -351,7 +416,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
             title: searching ? '搜索时自动展开，清空后恢复原来的折叠状态' : undefined,
             onClick: () => update(previous => ({ ...previous,
               collapsed: { ...previous.collapsed, [groupKey]: !inboxCollapsed(previous, category, key) },
-            })) }, `${closed ? '›' : '⌄'}  `, highlight(group.title, query), h('span', { className: 'dsi-count' }, group.rows.length)),
+            })) }, h(InboxIcon, { name: closed ? 'chevronRight' : 'chevronDown' }), highlight(group.title, query), h('span', { className: 'dsi-count' }, group.rows.length)),
           !closed && h('div', { role: 'group' }, group.rows.map(row => renderRow(row, category))));
       });
     }
@@ -364,10 +429,10 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         h('div', { className: 'dsi-section-heading' }, h('button', { type: 'button', className: 'dsi-section-head', 'aria-expanded': !collapsed, disabled: searching,
           title: searching ? '搜索时自动展开，清空后恢复原来的折叠状态' : undefined,
           'aria-label': `${labels[category]} ${members.length}`, onClick: () => toggleCollapsed(category === 'working' ? 'running' : category) },
-          h('span', { 'aria-hidden': true }, collapsed ? '›' : '⌄'),
+          h(InboxIcon, { name: collapsed ? 'chevronRight' : 'chevronDown' }),
           h('span', null, labels[category]), h('span', { className: 'dsi-count' }, members.length))),
         !collapsed && h('div', { className: 'dsi-section-body' }, members.length === 0
-          ? h('div', { className: 'dsi-empty' }, query.trim() ? '没有匹配的会话' : '点会话右侧 ✓ 即可整理')
+          ? h('div', { className: 'dsi-empty' }, query.trim() ? '没有匹配的会话' : '点会话右侧的勾选按钮即可整理')
           : renderMembers(category)));
     }
 
@@ -380,14 +445,12 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         : h(InboxBoundary, { originalProps: props, onOriginal: () => setMode('original') }, h(react.Fragment, null,
           h('div', { className: 'dsi-controls' },
             h('div', { className: 'dsi-search' },
-              h('svg', { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, 'aria-hidden': true },
-                h('circle', { cx: 10.7, cy: 10.7, r: 6.8 }), h('path', { d: 'm16 16 4.5 4.5' })),
+              h(InboxIcon, { name: 'search' }),
               h('input', { ref: searchRef, type: 'search', placeholder: '搜索会话或项目', 'aria-label': '搜索会话或项目',
                 title: '↑ ↓ 选择会话，Enter 打开，Shift+Enter 整理或恢复，Esc 清除搜索',
                 value: query, onChange: event => setQuery(event.target.value) })),
             h('div', { className: `dsi-project-filter${projectId === '*' ? '' : ' dsi-filter-active'}` },
-              h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, 'aria-hidden': true },
-                h('path', { d: 'M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z' })),
+              h(InboxIcon, { name: 'folder' }),
               h('select', { value: projectId, 'aria-label': '筛选项目', onChange: event => setProjectId(event.target.value) },
                 h('option', { value: '*' }, '全部项目'),
                 ...projects.map(project => h('option', { key: project.workspaceId, value: project.workspaceId }, project.title)),
@@ -408,18 +471,16 @@ function createInboxBrowser(OriginalBrowser, ctx) {
                   setViewOptionsOpen(false);
                 },
                 anchor: h('button', { type: 'button', className: 'dsi-view-options', 'aria-label': '列表显示选项', title: '项目分组与归档显示',
-                  'aria-haspopup': 'menu', 'aria-expanded': viewOptionsOpen, onClick: () => setViewOptionsOpen(value => !value) }, '⋯'),
+                  'aria-haspopup': 'menu', 'aria-expanded': viewOptionsOpen, onClick: () => setViewOptionsOpen(value => !value) }, h(InboxIcon, { name: 'more' })),
               }),
             h('button', { type: 'button', className: 'dsi-original-toggle', 'aria-label': '一键切回原布局',
               title: '一键恢复 DSH 原布局，保留聊天和整理记录', onClick: () => setMode('original') }, '原布局'),
             projectId !== '*' && h('button', { type: 'button', className: 'dsi-filter-chip', 'aria-label': '清除项目筛选', onClick: () => setProjectId('*') },
-              projectId === '' ? '未分组' : projects.find(project => project.workspaceId === projectId)?.title ?? '所选项目', h('span', { 'aria-hidden': true }, '×'))),
+              projectId === '' ? '未分组' : projects.find(project => project.workspaceId === projectId)?.title ?? '所选项目', h(InboxIcon, { name: 'close' }))),
           h('input', { ref: importRef, type: 'file', accept: '.json,application/json', hidden: true, onChange: readBackup,
             'aria-label': '选择整理备份文件' }),
           searching && h('div', { className: 'dsi-search-summary', role: 'status' }, `找到 ${visible.length} 个会话`,
             h('button', { type: 'button', onClick: () => { setQuery(''); searchRef.current?.focus(); }, 'aria-label': '清除搜索' }, '清除')),
-          notice && h('div', { role: 'status', className: 'dsi-notice' }, notice,
-            undo && h('button', { type: 'button', onClick: () => { restore(undo); setUndo(null); setNotice(null); } }, '撤销')),
           metadataErrors > 0 && h('div', { role: 'status', className: 'dsi-notice' }, `${metadataErrors} 条摘要暂未读到，可点击刷新重试；原聊天仍保留。`),
           h(_deepseek_ai_dsh_client_ui_primitives.HoverCardGroup, { className: 'dsi-hover-group' },
             h('div', { className: `dsi-list${searching ? ' dsi-list-search' : ''}`, role: 'tree', 'aria-label': '按工作状态整理的会话' },
@@ -441,7 +502,9 @@ function createInboxBrowser(OriginalBrowser, ctx) {
             h('p', null, '合并时保留现有记录；有新活动或正在运行的会话仍会显示。不会导入、删除或改写聊天。'),
             h('label', { className: 'dsi-backup-preference' },
               h('input', { type: 'checkbox', checked: restorePreferences, onChange: event => setRestorePreferences(event.target.checked) }),
-              '同时恢复项目分组、归档显示和折叠偏好'))))));
+              '同时恢复项目分组、归档显示和折叠偏好'))))),
+      h('div', { className: 'dsi-toast-host', 'aria-live': 'polite' },
+        notice && h(InboxToast, { notice, onDismiss: dismissNotice, onUndo: undoNotice })));
   }
   return SessionInboxBrowser;
 }

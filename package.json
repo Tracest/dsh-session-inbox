@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-inbox",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "A compact DSH session workbench with native menus, search, keyboard navigation, unread results, portable list backups, and reversible Working/Settled organization.",
   "type": "module",
   "main": "./lib/index.js",
