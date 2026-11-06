@@ -20,9 +20,6 @@ jobs:
         dsh: ${{ fromJSON(inputs.dsh_version && format('["{0}"]', inputs.dsh_version) || '["0.1.7-rc.1","0.2.1-rc.5","0.2.2-rc.1"]') }}
     env:
       DSH_VERSION: ${{ matrix.dsh }}
-      DSH_HOME: ${{ runner.temp }}/inbox-home
-      DSH_AGENTS_HOME: ${{ runner.temp }}/inbox-agents
-      INBOX_TEST_DIR: ${{ runner.temp }}/inbox-evidence
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,6 +30,10 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/inbox-runtime" --ignore-scripts --no-audit --no-fund "@deepseek-ai/dsh@$DSH_VERSION" playwright@1.64.1
           node "$RUNNER_TEMP/inbox-runtime/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Exercise current native UI and fallback
+        env:
+          DSH_HOME: ${{ runner.temp }}/inbox-home
+          DSH_AGENTS_HOME: ${{ runner.temp }}/inbox-agents
+          INBOX_TEST_DIR: ${{ runner.temp }}/inbox-evidence
         run: |
           mkdir -p "$INBOX_TEST_DIR"
           cli="$RUNNER_TEMP/inbox-runtime/node_modules/@deepseek-ai/dsh/lib/bin.js"
