@@ -39,7 +39,7 @@ function shellFixture(sidebarCss = currentSidebarCss) {
       return styles.filter(style => style.dataset[key] === attribute[2]);
     },
   };
-  const context = vm.createContext({ document, INBOX_CSS: template,
+  const context = vm.createContext({ document, window: {}, INBOX_CSS: template,
     inboxReadModeSnapshot: () => mode.value,
     inboxSubscribeMode: listener => { listeners.add(listener); return () => listeners.delete(listener); },
   });
@@ -115,44 +115,6 @@ test('another plugin cannot supply the native sidebar class map', () => {
   assert.throws(() => fixture.start(), /one loaded native SidebarRoot stylesheet/);
 });
 
-for (const version of [...versions, '0.2.2-rc.1+desktop.1']) test(`${version} selects only its own native adapter and fallback styles`, () => {
-  const upstream = fs.readFileSync(new URL(`../vendor/workspace-client-${version.split('+')[0]}.js`, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-  const expected = [...upstream.matchAll(/^\s*const css(?:\$\d)? = ("(?:\\.|[^"\\])*");$/gm)]
-    .map(match => JSON.parse(match[1]));
-  const styles = [];
-  let factory;
-  vm.runInNewContext(fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8'), {
-    window: { __DSH_SESSION_INBOX_HOST__: { version }, __ModuleLoader__: { load(module) { factory = module.factory; } } },
-    document: { querySelector: () => null, createElement: () => ({ dataset: {} }),
-      head: { appendChild(style) { styles.push(style); } } },
-  });
-  const exports = factory(name => {
-    if (name === 'react') return { Component: class {} };
-    if (name === '@deepseek-ai/cordis') return { Service: class {} };
-    return {};
-  });
-  assert.equal(typeof exports.apply, 'function');
-  assert.equal(exports.inject.includes('contextMenus'), upstream.includes('"contextMenus"'), 'menu dependencies must follow this host');
-  const manifest = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.ok(manifest.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-context-menu'));
-  const expectedIds = [...upstream.matchAll(/^\s*const tagId(?:\$\d+)? = ("(?:\\.|[^"\\])*");$/gm)]
-    .map(match => JSON.parse(match[1]).replace('@deepseek-ai/dsh-client-ui-workspace', 'dsh-session-inbox'));
-  assert.ok(expected.length >= 3);
-  assert.equal(expectedIds.length, expected.length);
-  assert.deepEqual(styles.map(style => style.textContent), expected);
-  assert.deepEqual(styles.map(style => style.dataset.pluginCss), expectedIds);
-});
-
-test('unknown hosts fail before loading a native adapter or injecting CSS', () => {
-  const compiled = fs.readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8');
-  for (const version of [undefined, '0.2.2-rc.2', '0.3.0']) {
-    let factory;
-    vm.runInNewContext(compiled, {
-      window: { __DSH_SESSION_INBOX_HOST__: { version }, __ModuleLoader__: { load(module) { factory = module.factory; } } },
-    });
-    assert.throws(() => factory(() => { throw new Error('must not import native code'); }), /Unsupported DSH version/);
-  }
-});
 
 for (const version of versions) test(`${version} resolves the actual sidebar stylesheet, including older optional wrappers`, () => {
   const original = fs.readFileSync(new URL(`../vendor/sidebar-client-${version}.js`, import.meta.url), 'utf8');

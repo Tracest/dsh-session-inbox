@@ -2,42 +2,50 @@
 
 [简体中文](README.zh-CN.md) · [MIT license](LICENSE)
 
-A compact session sidebar for **DeepSeek Harness**, with 16 version-specific adapters. Group conversations
+A compact session sidebar for **DeepSeek Harness**, with a capability-checked enhancement of the current native UI. Group conversations
 by project when needed, review completed or actionable chats in an **untitled
 upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
-The current workbench labels are Chinese. Version `0.4.5` retains the rounded
+The current workbench labels are Chinese. Version `0.5.0` retains the rounded
 monochrome icons and bottom floating Undo notice: five seconds, paused while
 hovered or focused, without shifting the list.
 
-## Supported DSH versions
+## Compatibility policy
 
-| Release family | Exact supported versions |
-| --- | --- |
-| 0.1.7 | rc.1, rc.2 |
-| 0.2.0 | rc.1, rc.2 |
-| 0.2.1 | alpha.1–alpha.5, rc.1–rc.5 |
-| 0.2.2 | alpha.3, rc.1 |
+Version 0.5.0 admits DSH **0.1.7-rc.1 up to, but not including, 1.0.0 prereleases**,
+excluding the known-broken **0.2.2-alpha.2**. DSH evaluates prereleases with
+`includePrerelease: true`. Build metadata does not change this policy.
 
-Each entry uses the matching published native workspace adapter and menu API.
-The package engine range is an explicit allowlist; untested future releases are
-rejected. Build metadata such as `+desktop.1` does not change the selected adapter.
-Older hosts keep their native capabilities; shortcuts or extension slots absent
-from that host are not invented.
+The original workspace plugin stays enabled. The host reads its current native
+module through `clientModules.clientPath` and prepares an in-memory enhancement;
+the browser applies it only if that exact factory is still being loaded. Native
+services, menus, dependencies and CSS remain owned by the current DSH release.
+Changed hooks, missing capabilities, rendering errors and plugin disposal retain
+or restore the current native session list, with a brief fallback notice when needed.
+Installed DSH files and conversation records are never patched.
 
-All 16 official runtimes passed 13 checks each in isolated Windows Web profiles:
-startup, native session creation/rename, menus (button, right click and Shift+F10),
-search, Settle/Undo, timer pauses, persistence after reload, backup export/merge,
-and layout switching at 1280×820 and 1471×1200. The list checks use empty test
-sessions presented as nonblank by a browser-only fixture; no model API calls.
-The 75 JavaScript and 6 installer tests also pass. macOS, Linux, mobile, live model
-turns and arbitrary third-party combinations are not covered by this matrix.
-Earlier Desktop evidence for plugin `0.4.2` on DSH `0.2.1-rc.5` remains historical.
+The integration still uses a few inspected native view hooks; it is not a promise
+of compatibility with every future UI redesign. Normal version changes no longer
+require an allowlist update. Incompatible changes may temporarily remove the
+workbench enhancement while leaving native DSH usable. The 1.0 boundary requires
+a new assessment.
 
-DSH `0.2.2-alpha.2` is excluded: its isolated native first-run acknowledgement
-failed even without this plugin. With that acknowledgement preconfigured, session
-creation failed with `agent-preset/invalid`. It did not pass acceptance.
+Sixteen published native workspace/sidebar pairs remain regression fixtures:
+0.1.7-rc.1/rc.2; 0.2.0-rc.1/rc.2; 0.2.1-alpha.1–alpha.5 and rc.1–rc.5;
+0.2.2-alpha.3/rc.1. They are not shipped as runtime substitutes. Browser regression
+uses official 0.1.7-rc.1, 0.2.1-rc.5 and 0.2.2-rc.1 Web hosts in isolated profiles,
+including native-factory-change and lifecycle fallback checks. Empty fixture
+sessions are presented as nonblank only in the browser; no model API calls.
+Synthetic future version labels test admission, not an unreleased DSH runtime.
+Other platforms, live model turns and arbitrary third-party combinations need
+separate acceptance.
+
+Release 0.5.0 passed 85 JavaScript tests, 6 installer tests and 15 isolated Windows
+Web checks on each of the three runtimes above (45 browser checks total).
+
+DSH 0.2.2-alpha.2 remains excluded after native first-run acknowledgement and
+session creation failures reproduced without the plugin.
 
 <img src="assets/sidebar.jpg" alt="Actual DSH Session Workbench sidebar" width="900">
 
@@ -63,11 +71,7 @@ dsh plugin --profile web add git+https://github.com/Tracest/dsh-session-inbox.gi
 Use the profile that serves your application. Installing into `web` does not
 change DSH Desktop's `desktop` profile. The compiled browser bundle is checked
 in, so installation does not run a build script or require an npm account.
-After installation, exit and reopen DSH when its tasks are idle so all UI
-dependencies bind to the replacement workspace module.
-
-This package declares an exact `engines.dsh` requirement intentionally. It
-adapts a version-specific UI contract and must be revalidated before widening it.
+After installation, exit and reopen DSH when its tasks are idle so the current native module and its enhancement load together.
 
 If you are upgrading the earlier local-only build, remove its marked
 `# dsh-session-inbox managed section` override using that build's recovery script
@@ -191,13 +195,18 @@ npm test
 npm pack --dry-run
 ```
 
-No JavaScript dependencies are needed to build the checked-in browser adapters.
-`compatibility.json` owns the version list; the package engine range must match.
-`build.mjs` verifies every adapter's replacement hooks, normalizes Windows checkout
-line endings, syntax-checks the output, and records upstream hashes. Only the
-selected adapter executes. At startup, compact styles
-resolve the current class map from the official sidebar's own loaded stylesheet.
-The official `ui-sidebar` remains loaded. Neither `app.asar` nor user conversations are patched.
+No JavaScript dependencies are needed for the build and unit tests.
+`compatibility.json` owns the admission policy and regression fixture list.
+`build.mjs` validates the hooks against every fixture, normalizes line endings,
+checks generated syntax and records upstream hashes. The package ships one small
+bootstrap and one enhancement template, not sixteen copied workspace modules.
+At runtime the host prepares the template against the current native factory;
+compact styles resolve class names from the native sidebar's own loaded sheet.
+Both official workspace and sidebar modules remain enabled.
+
+The **DSH compatibility** GitHub workflow runs the browser regression on pushes.
+Its manual `dsh_version` input can check a newly published upstream release without
+changing the allowlist or plugin package. This is a check, not automatic publishing.
 
 Checks cover classification, safe Settle/restore, resumed work, corrupt state,
 partial catalogs, legacy preferences, stale timestamp hydration, and previously
@@ -207,7 +216,7 @@ layout switching, and cold starts. That evidence does not establish universal
 third-party or cross-platform support.
 Search expansion, literal highlighting, pending priority, completion acknowledgement,
 backup validation and merge preservation have additional regression checks.
-Every adapter's complete native CSS payloads and the stylesheet lifecycle are checked,
+Every fixture's complete native CSS payloads and the stylesheet lifecycle are checked,
 including switching modes and disposing a replaced UI module.
 New hosts use the native context-menu service; older hosts use native menu slots
 and their open-state context. Both retain button, right-click and Shift+F10 access,
@@ -215,8 +224,7 @@ and use the host's rename permission hook when available.
 
 ## Attribution
 
-[DeepSeek's MIT notice](vendor/LICENSE.deepseek) is retained for the version-pinned
-native workspace adapter. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[DeepSeek's MIT notice](vendor/LICENSE.deepseek) is retained for native regression fixtures and the runtime enhancement. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 The compact header and Working/Settled organization were inspired by T3 Code.
 This workbench keeps its tool grid above the list; no T3 Code implementation is included.
 

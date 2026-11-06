@@ -1,0 +1,55 @@
+name: DSH compatibility
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      dsh_version:
+        description: 'Official DSH version to check (blank uses the regression matrix)'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dsh: ${{ fromJSON(inputs.dsh_version && format('["{0}"]', inputs.dsh_version) || '["0.1.7-rc.1","0.2.1-rc.5","0.2.2-rc.1"]') }}
+    env:
+      DSH_VERSION: ${{ matrix.dsh }}
+      DSH_HOME: ${{ runner.temp }}/inbox-home
+      DSH_AGENTS_HOME: ${{ runner.temp }}/inbox-agents
+      INBOX_TEST_DIR: ${{ runner.temp }}/inbox-evidence
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated runtime and browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/inbox-runtime" --ignore-scripts --no-audit --no-fund "@deepseek-ai/dsh@$DSH_VERSION" playwright@1.64.1
+          node "$RUNNER_TEMP/inbox-runtime/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Exercise current native UI and fallback
+        run: |
+          mkdir -p "$INBOX_TEST_DIR"
+          cli="$RUNNER_TEMP/inbox-runtime/node_modules/@deepseek-ai/dsh/lib/bin.js"
+          node "$cli" plugin --profile web add "$GITHUB_WORKSPACE" --ignore-scripts
+          node "$cli" web --host 127.0.0.1 --port 0 --no-open > "$INBOX_TEST_DIR/$DSH_VERSION.log" 2> "$INBOX_TEST_DIR/$DSH_VERSION.err" &
+          host_pid=$!
+          trap 'kill "$host_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 90); do
+            if grep -q 'dsh web:' "$INBOX_TEST_DIR/$DSH_VERSION.log"; then break; fi
+            kill -0 "$host_pid"
+            sleep 1
+          done
+          INBOX_PLAYWRIGHT="$RUNNER_TEMP/inbox-runtime/node_modules/playwright/index.mjs" node test/browser-smoke.mjs "$DSH_VERSION"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compatibility-${{ matrix.dsh }}
+          path: |
+            ${{ runner.temp }}/inbox-evidence/*-verification.json
+            ${{ runner.temp }}/inbox-evidence/*-failure.png

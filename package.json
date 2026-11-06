@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-inbox",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "A compact DSH session workbench with native menus, search, keyboard navigation, unread results, portable list backups, and reversible Working/Settled organization.",
   "type": "module",
   "main": "./lib/index.js",
@@ -15,6 +15,7 @@
     "lib",
     "vendor/LICENSE.deepseek",
     "cordis.patch.yml",
+    "compatibility.json",
     "locale",
     "assets",
     "README.md",
@@ -31,19 +32,7 @@
     "client": {
       "platform": "web",
       "inject": [
-        "@deepseek-ai/dsh-api-remote-access",
-        "@deepseek-ai/dsh-api-remotes",
-        "@deepseek-ai/dsh-api-session-controller",
-        "@deepseek-ai/dsh-api-workspace-controller",
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-shortcuts",
-        "@deepseek-ai/dsh-client-ui-conversation",
-        "@deepseek-ai/dsh-client-ui-layout",
-        "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-session",
-        "@deepseek-ai/dsh-client-ui-sidebar",
-        "@deepseek-ai/dsh-client-ui-context-menu"
+        "@deepseek-ai/dsh-client-ui-workspace"
       ]
     },
     "bundle": {
@@ -52,7 +41,7 @@
   },
   "engines": {
     "node": ">=20",
-    "dsh": "0.1.7-rc.1 || 0.1.7-rc.2 || 0.2.0-rc.1 || 0.2.0-rc.2 || 0.2.1-alpha.1 || 0.2.1-alpha.2 || 0.2.1-alpha.3 || 0.2.1-alpha.4 || 0.2.1-alpha.5 || 0.2.1-rc.1 || 0.2.1-rc.2 || 0.2.1-rc.3 || 0.2.1-rc.4 || 0.2.1-rc.5 || 0.2.2-alpha.3 || 0.2.2-rc.1"
+    "dsh": ">=0.1.7-rc.1 <0.2.2-alpha.2 || >0.2.2-alpha.2 <1.0.0-0"
   },
   "license": "MIT",
   "author": "Tracest",

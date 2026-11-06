@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 — 2026-11-06
+
+- Replace exact-release runtime copies with an enhancement of the currently loaded
+  native workspace. Keep the official plugin, dependency graph and native CSS enabled.
+- Admit DSH 0.1.7-rc.1 through pre-1.0 releases, except known-broken 0.2.2-alpha.2.
+  Check capabilities and factory identity instead of rejecting an unfamiliar version.
+- Restore native UI on changed hooks, stale module bytes, missing UI capabilities,
+  render failure or lifecycle disposal. Preserve rounded icons and floating Undo.
+- Retain 16 upstream pairs as regression fixtures; add isolated browser coverage
+  for fallback and a workflow to check newly published DSH releases on demand.
+- Pass 85 JavaScript and 6 installer tests, plus 15 isolated Windows Web checks
+  on each of 0.1.7-rc.1, 0.2.1-rc.5 and 0.2.2-rc.1 (45 browser checks).
+
 ## 0.4.5 — 2026-11-05
 
 - Support 16 exact DSH releases: 0.1.7-rc.1/rc.2, 0.2.0-rc.1/rc.2,

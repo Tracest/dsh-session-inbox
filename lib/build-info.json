@@ -1,6 +1,8 @@
 {
-  "version": "0.4.5",
-  "dshVersions": [
+  "version": "0.5.0",
+  "strategy": "current-native-factory",
+  "engineRange": ">=0.1.7-rc.1 <0.2.2-alpha.2 || >0.2.2-alpha.2 <1.0.0-0",
+  "regressionVersions": [
     "0.1.7-rc.1",
     "0.1.7-rc.2",
     "0.2.0-rc.1",

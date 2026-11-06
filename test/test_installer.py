@@ -15,7 +15,7 @@ class ManagedPatchTests(unittest.TestCase):
         package = json.loads((installer.SOURCE / 'package.json').read_text(encoding='utf-8'))
         self.assertEqual(installer.SUPPORTED_DSH, package['engines']['dsh'])
         versions = json.loads((installer.SOURCE / 'compatibility.json').read_text(encoding='utf-8'))['dshVersions']
-        self.assertEqual(installer.SUPPORTED_DSH, ' || '.join(versions))
+        self.assertEqual(installer.SUPPORTED_DSH, installer.POLICY['engineRange'])
         for version in versions:
             self.assertTrue(installer.supports_dsh(version))
         self.assertTrue(installer.supports_dsh('0.2.1-rc.5+desktop.1'))
@@ -26,8 +26,11 @@ class ManagedPatchTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'requires DSH'):
                 installer.install(Path('/profile-that-must-not-be-accessed'), Path('/app'))
 
-    def test_unverified_future_versions_remain_rejected(self):
-        for version in ('0.2.2-rc.2', '0.2.2', '0.3.0', 'not-a-version', ''):
+    def test_forward_versions_use_capability_checks_with_a_major_boundary(self):
+        for version in ('0.2.2-rc.2', '0.2.2', '0.3.0-beta.1', '0.9.0', '0.2.99-rc.7+desktop.1'):
+            self.assertTrue(installer.supports_dsh(version))
+        for version in ('0.1.7-rc.0', '0.2.2-alpha.2', '0.2.2-alpha.2+desktop.1', '1.0.0-alpha.1',
+                        '1.0.0', 'not-a-version', '', '0.2.2-rc.01'):
             self.assertFalse(installer.supports_dsh(version))
 
     def test_install_and_update_keep_other_plugin_rows(self):

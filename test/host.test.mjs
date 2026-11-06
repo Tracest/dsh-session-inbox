@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { apply, inboxHostVersion } from '../src/host.mjs';
+import { apply, inboxHostVersion } from '../lib/index.js';
 
-test('host bootstrap uses its current release and publishes an owned global', () => {
+test('host bootstrap retains native UI when the public module path is unavailable', () => {
   let listener;
   const ctx = { clientModules: { graph: () => ({ release: { version: '0.2.2-rc.1' } }) },
     on(event, callback) { assert.equal(event, 'webserver/index-inject'); listener = callback; } };
@@ -14,7 +14,24 @@ test('host bootstrap uses its current release and publishes an owned global', ()
   const table = [{ kind: 'global', name: 'another-plugin', value: true }];
   listener(table);
   assert.equal(table[0].name, 'another-plugin');
-  assert.deepEqual(table[1], { kind: 'global', name: '__DSH_SESSION_INBOX_HOST__', value: { version: '0.2.2-rc.1' } });
+  assert.deepEqual(table[1], { kind: 'global', name: '__DSH_SESSION_INBOX_HOST__',
+    value: { version: '0.2.2-rc.1', mode: 'native', reason: 'native-module-unavailable' } });
+});
+
+test('host uses the current public native path even with an unseen release label', () => {
+  let listener;
+  const native = new URL('../vendor/workspace-client-0.2.2-rc.1.js', import.meta.url);
+  const ctx = { clientModules: {
+    graph: () => ({ release: { version: '0.3.17-rc.2' } }),
+    clientPath: id => { assert.equal(id, '@deepseek-ai/dsh-client-ui-workspace'); return native; },
+  }, on(event, callback) { listener = callback; } };
+  apply(ctx);
+  const table = [];
+  listener(table);
+  assert.equal(table[0].value.mode, 'adaptive');
+  assert.equal(table[0].value.version, '0.3.17-rc.2');
+  assert.equal(table[1].kind, 'script');
+  assert.ok(table[1].text.includes('inboxInstallBridge'));
 });
 
 test('old hosts resolve app-boot from the real launcher owner across a directory link', () => {

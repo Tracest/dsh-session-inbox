@@ -5,6 +5,40 @@ import vm from 'node:vm';
 import * as model from '../src/model.mjs';
 
 const source = fs.readFileSync(new URL('../src/client.mjs', import.meta.url), 'utf8');
+test('changed native private imports leave browser construction on the original component', () => {
+  const faults = [];
+  const context = vm.createContext({ window: { __DSH_SESSION_INBOX_BRIDGE__: { fail: reason => faults.push(reason) } },
+    console: { warn() {} } });
+  vm.runInContext(source, context);
+  const original = () => 'native';
+  assert.equal(context.createInboxBrowser(original, {}), original);
+  assert.deepEqual(faults, ['browser-construction-unavailable']);
+});
+test('conditional native actions and service capabilities are checked before enhancement', () => {
+  const context = vm.createContext({});
+  vm.runInContext(source, context);
+  const props = Object.fromEntries(['useSessions', 'useSessionStatus', 'useWorkspaces', 'usePanelInfo',
+    'open', 't', 'renderSlot', 'requestSessionRename', 'unarchiveSession'].map(key => [key, () => {}]));
+  const ctx = { sessions: { refresh() {}, refreshProjections() {} } };
+  assert.equal(context.inboxBrowserCapabilities(props, ctx), true);
+  for (const key of ['open', 'renderSlot', 'requestSessionRename', 'unarchiveSession']) {
+    assert.equal(context.inboxBrowserCapabilities({ ...props, [key]: undefined }, ctx), false);
+  }
+  const unified = { ...props, ...Object.fromEntries(['useContextMenu', 'useContextMenuTarget', 'useSessionAccess', 'openSessionMenu'].map(key => [key, () => {}])) };
+  assert.equal(context.inboxBrowserCapabilities(unified, ctx), true);
+  assert.equal(context.inboxBrowserCapabilities({ ...unified, openSessionMenu: undefined }, ctx), false);
+  assert.equal(context.inboxBrowserCapabilities(props, { sessions: { refresh() {} } }), false);
+});
+test('sync action errors and rejected async actions request native fallback without escaping', async () => {
+  const faults = [];
+  const context = vm.createContext({ window: { __DSH_SESSION_INBOX_BRIDGE__: { fail: reason => faults.push(reason) } }, console: { warn() {} } });
+  vm.runInContext(source, context);
+  context.inboxRunNative(() => { throw Error('changed callback'); });
+  context.inboxRunNative(() => Promise.reject(Error('changed async callback')));
+  context.inboxRunNative(() => undefined);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(faults, ['browser-action-unavailable', 'browser-action-unavailable']);
+});
 const h = (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) });
 function nodes(tree) {
   return !tree || typeof tree !== 'object' ? [] : [tree, ...tree.children.flatMap(nodes), ...nodes(tree.props.anchor)];
@@ -15,7 +49,7 @@ function rowFixture({ blank = false, renamable = true, active = null, legacy = f
   const react = { createElement: h, Component: class {}, Fragment: 'Fragment',
     useState: value => [typeof value === 'function' ? value() : value, next => calls.push({ kind: 'state', next })],
     useMemo: fn => fn(), useCallback: fn => fn, useRef: current => ({ current }), useEffect: () => {} };
-  const context = vm.createContext({ ...model, react, INBOX_PLUGIN_VERSION: 'test', INBOX_HAS_LEADING_SLOT: true,
+  const context = vm.createContext({ ...model, react, window: {}, INBOX_PLUGIN_VERSION: 'test', INBOX_HAS_LEADING_SLOT: true,
     localStorage: { getItem: () => blank
       ? JSON.stringify({ ...model.inboxEmptyState(), settled: { chat: { stamp: '100', at: 200 } }, collapsed: {} }) : null },
     workspaceDisplayTitle: title => title,
@@ -23,8 +57,10 @@ function rowFixture({ blank = false, renamable = true, active = null, legacy = f
     SessionHoverContent: 'SessionHoverContent', inboxRelativeTime: () => 'now' });
   vm.runInContext(source, context);
   const session = { id: 'chat', title: 'Session', updatedAt: 100, blank };
-  const browser = context.createInboxBrowser('OriginalBrowser', {});
+  const browser = context.createInboxBrowser('OriginalBrowser', { sessions: { refresh() {}, refreshProjections() {} } });
   const props = {
+    open() {},
+    unarchiveSession() {}, expandSidebar() {},
     useSessions: select => select({ phase: 'ready', ids: ['chat'], byId: { chat: session } }),
     useSessionStatus: select => select(new Map()),
     useWorkspaces: select => select({ items: [], archivedSessionIds: [], pinnedSessionIds: [] }),
@@ -47,7 +83,9 @@ function rowFixture({ blank = false, renamable = true, active = null, legacy = f
     delete props.openSessionMenu;
   }
   if (!accessHook) delete props.useSessionAccess;
-  const row = nodes(browser(props)).find(node => node.type.name === 'InboxRow');
+  const gate = browser(props);
+  const inbox = gate.children[0];
+  const row = nodes(inbox.type(inbox.props)).find(node => node.type.name === 'InboxRow');
   assert.ok(row, 'session row must render');
   let tree = row.type(row.props);
   while (typeof tree.type === 'function') tree = tree.type(tree.props);

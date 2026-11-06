@@ -1,7 +1,4 @@
-# DSH combines this bundle after the web/desktop profile. Only its native
-# workspace renderer is replaced; navigation and the official sidebar stay.
-- id: ui-workspace
-  disabled: true
+# Keep the native workspace active; unsupported capabilities retain its UI.
 - insert:
     - id: session-inbox
       name: dsh-session-inbox

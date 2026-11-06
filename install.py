@@ -13,12 +13,28 @@ from datetime import datetime, timezone
 SOURCE = Path(__file__).resolve().parent
 MARKER = '# dsh-session-inbox managed section'
 END = '# end dsh-session-inbox managed section'
-# Exact alternatives match the tested native adapters; future releases stay guarded.
+# Keep the optional installer on the same admission policy as the standard bundle.
 SUPPORTED_DSH = json.loads((SOURCE / 'package.json').read_text(encoding='utf-8'))['engines']['dsh']
+POLICY = json.loads((SOURCE / 'compatibility.json').read_text(encoding='utf-8'))
 
 
 def supports_dsh(version: str) -> bool:
-    return version.strip().split('+', 1)[0] in {item.strip() for item in SUPPORTED_DSH.split('||')}
+    def key(value):
+        match = re.fullmatch(r'(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?', value.strip())
+        if not match:
+            raise ValueError('Invalid semantic version')
+        pre = match[4]
+        parts = [] if pre is None else pre.split('.')
+        if any(part.isdigit() and len(part) > 1 and part[0] == '0' for part in parts):
+            raise ValueError('Invalid prerelease number')
+        return (*map(int, match.group(1, 2, 3)), pre is None,
+                tuple((0, int(part)) if part.isdigit() else (1, part) for part in parts))
+    try:
+        candidate = key(version)
+        return (key(POLICY['minimum']) <= candidate < key(POLICY['maximumExclusive'])
+                and all(candidate != key(excluded) for excluded in POLICY['excludedVersions']))
+    except ValueError:
+        return False
 
 
 def replace_managed_section(text: str, section: str) -> str:
@@ -60,7 +76,7 @@ def install(profile: Path, app: Path) -> None:
     package = json.loads((profile / 'package.json').read_text())
     if 'dsh-session-inbox' in package.get('dsh', {}).get('profile', {}).get('bundles', []):
         raise ValueError('Already installed as a DSH bundle. Manage it through DSH instead.')
-    section = (f'{MARKER}\n- id: ui-workspace\n  disabled: true\n- insert:\n'
+    section = (f'{MARKER}\n- insert:\n'
                '    - id: session-inbox-local\n      name: ./local-plugins/dsh-session-inbox/lib/index.js\n'
                f'{END}\n')
     candidate = replace_managed_section(original, section)
@@ -70,7 +86,7 @@ def install(profile: Path, app: Path) -> None:
     (backup / 'cordis.patch.yml').chmod(0o600)
     destination = profile / 'local-plugins/dsh-session-inbox'
     destination.mkdir(parents=True, exist_ok=True)
-    for name in ['package.json', 'README.md', 'README.zh-CN.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'cordis.patch.yml']:
+    for name in ['package.json', 'compatibility.json', 'README.md', 'README.zh-CN.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'cordis.patch.yml']:
         shutil.copy2(SOURCE / name, destination / name)
     for name in ['lib', 'locale', 'assets', 'vendor']:
         shutil.copytree(SOURCE / name, destination / name, dirs_exist_ok=True)

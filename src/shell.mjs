@@ -40,11 +40,18 @@ function inboxInstallShell(ctx) {
     style.dataset.inboxShell = 'dsh-session-inbox';
     style.textContent = css;
     document.head.appendChild(style);
-    const render = () => { document.documentElement.dataset.inboxMode = inboxReadModeSnapshot(); };
+    const bridge = window.__DSH_SESSION_INBOX_BRIDGE__;
+    const render = () => {
+      const enabled = bridge?.enabled !== false;
+      if (enabled && ![...document.querySelectorAll(selector)].includes(style)) document.head.appendChild(style);
+      document.documentElement.dataset.inboxMode = enabled ? inboxReadModeSnapshot() : 'original';
+    };
     render();
     const unsubscribe = inboxSubscribeMode(render);
+    const unsubscribeBridge = bridge?.subscribe(render);
     return () => {
       unsubscribe();
+      unsubscribeBridge?.();
       // A previous module can dispose after its replacement has already taken ownership.
       if ([...document.querySelectorAll(selector)].includes(style)) delete document.documentElement.dataset.inboxMode;
       style.remove();

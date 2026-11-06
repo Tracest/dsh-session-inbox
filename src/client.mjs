@@ -1,5 +1,37 @@
-/** UI adapter, compiled inside the pinned workspace module to preserve DSH navigation and slot contracts. */
+/** Enhance the current native workspace while retaining its props and child slots. */
 function createInboxBrowser(OriginalBrowser, ctx) {
+  try { return inboxCreateBrowser(OriginalBrowser, ctx); }
+  catch (error) {
+    window.__DSH_SESSION_INBOX_BRIDGE__?.fail('browser-construction-unavailable');
+    console.warn('[dsh-session-inbox] Native browser retained', error);
+    return OriginalBrowser;
+  }
+}
+
+function inboxBrowserCapabilities(props, ctx) {
+  const required = ['useSessions', 'useSessionStatus', 'useWorkspaces', 'usePanelInfo',
+    'open', 't', 'renderSlot', 'requestSessionRename', 'unarchiveSession'];
+  if (props.useContextMenu != null) required.push('useContextMenu', 'useContextMenuTarget', 'useSessionAccess', 'openSessionMenu');
+  if (props.useWorkspaceShortcuts != null) required.push('useWorkspaceShortcuts', 'expandSidebar');
+  if (props.useSessionAccess != null) required.push('useSessionAccess');
+  return required.every(name => typeof props[name] === 'function')
+    && ['refresh', 'refreshProjections'].every(name => typeof ctx.sessions?.[name] === 'function');
+}
+
+function inboxRunNative(action, onError) {
+  const failed = error => {
+    window.__DSH_SESSION_INBOX_BRIDGE__?.fail('browser-action-unavailable');
+    console.warn('[dsh-session-inbox] Native action unavailable', error);
+    onError?.(error);
+  };
+  try {
+    const result = action();
+    Promise.resolve(result).catch(failed);
+    return result;
+  } catch (error) { failed(error); }
+}
+
+function inboxCreateBrowser(OriginalBrowser, ctx) {
   const h = react.createElement;
   const labels = { working: '工作中', settled: '已整理' };
 
@@ -63,7 +95,10 @@ function createInboxBrowser(OriginalBrowser, ctx) {
   class InboxBoundary extends react.Component {
     state = { failed: false };
     static getDerivedStateFromError() { return { failed: true }; }
-    componentDidCatch(error) { console.error('[dsh-session-inbox] Original list fallback:', error); }
+    componentDidCatch(error) {
+      window.__DSH_SESSION_INBOX_BRIDGE__?.fail('browser-contract-changed');
+      console.warn('[dsh-session-inbox] Original list fallback:', error);
+    }
     render() {
       return this.state.failed ? h(react.Fragment, null,
         h('div', { role: 'alert', className: 'dsi-notice' }, '工作台加载失败，已显示原列表。',
@@ -93,7 +128,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       open: event => {
         event.currentTarget.focus({ preventScroll: true });
         const rect = event.currentTarget.getBoundingClientRect();
-        native.openSessionMenu(row.id, row.title, { x: rect.left, y: rect.bottom }, 'toggle');
+        inboxRunNative(() => native.openSessionMenu(row.id, row.title, { x: rect.left, y: rect.bottom }, 'toggle'));
       } });
   }
 
@@ -140,7 +175,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
         h('span', { className: 'dsi-dot', 'aria-hidden': true }, showStatus ? row.pending ? '!' : ''
           : INBOX_HAS_LEADING_SLOT && !row.archived && !row.blank && native.renderSlot('sidebar.session.row.leading', { sessionId: row.id })),
         h('span', { className: 'dsi-row-copy' }, h('span', { className: 'dsi-title',
-          onDoubleClick: row.blank || !renamable ? undefined : event => { event.stopPropagation(); native.requestSessionRename(row.id, row.title); } },
+          onDoubleClick: row.blank || !renamable ? undefined : event => { event.stopPropagation(); inboxRunNative(() => native.requestSessionRename(row.id, row.title)); } },
           highlight(row.title, query)), detail && h('span', { className: 'dsi-detail' }, highlight(detail, query))),
         row.pinned && h('span', { className: 'dsi-pin', title: '已置顶', 'aria-label': '已置顶' },
           h(InboxIcon, { name: 'pin' }))),
@@ -210,7 +245,7 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       if (lastSearchRequest.current === shortcutState.searchRequest) return;
       lastSearchRequest.current = shortcutState.searchRequest;
       if (state.mode !== 'inbox') return;
-      props.expandSidebar();
+      inboxRunNative(() => props.expandSidebar());
       requestAnimationFrame(() => searchRef.current?.focus());
     }, [shortcutState.searchRequest, state.mode, props.expandSidebar]);
     react.useEffect(() => {
@@ -340,10 +375,9 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       });
     };
     const open = row => {
-      if (row.archived) {
-        props.unarchiveSession(row.id).then(() => props.open(row.id))
-          .catch(error => showNotice(`无法恢复会话：${error.message ?? error}`));
-      } else props.open(row.id);
+      inboxRunNative(() => row.archived
+        ? Promise.resolve(props.unarchiveSession(row.id)).then(() => props.open(row.id))
+        : props.open(row.id), error => showNotice(`无法打开会话：${error.message ?? error}`));
     };
     const visible = inboxFilterRows(rows, query, projectId, state.includeArchived);
     const sections = inboxPartition(visible, state, returnedAt);
@@ -352,9 +386,8 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       requestedMetadata.current.clear();
       setMetadataErrors(0);
       setRefreshEpoch(value => value + 1);
-      ctx.sessions.refresh()
-        .then(() => showNotice('会话目录已刷新。'))
-        .catch(error => showNotice(`会话目录刷新失败：${error.message ?? error}`));
+      inboxRunNative(() => Promise.resolve(ctx.sessions.refresh()).then(() => showNotice('会话目录已刷新。')),
+        error => showNotice(`会话目录刷新失败：${error.message ?? error}`));
     };
 
     const exportBackup = () => {
@@ -543,5 +576,23 @@ function createInboxBrowser(OriginalBrowser, ctx) {
       h('div', { className: 'dsi-toast-host', 'aria-live': 'polite' },
         notice && h(InboxToast, { notice, onDismiss: dismissNotice, onUndo: undoNotice })));
   }
-  return SessionInboxBrowser;
+  class AdaptiveBoundary extends react.Component {
+    state = { failed: false };
+    static getDerivedStateFromError() { return { failed: true }; }
+    componentDidCatch() { window.__DSH_SESSION_INBOX_BRIDGE__?.fail('browser-contract-changed'); }
+    render() { return this.state.failed ? h(OriginalBrowser, this.props.nativeProps) : this.props.children; }
+  }
+  return function AdaptiveBrowser(props) {
+    const bridge = window.__DSH_SESSION_INBOX_BRIDGE__;
+    const [, refresh] = react.useState(0);
+    react.useEffect(() => {
+      const unsubscribe = bridge?.subscribe(() => refresh(value => value + 1));
+      refresh(value => value + 1); // Account for activation between render and subscription.
+      return unsubscribe;
+    }, [bridge]);
+    const available = inboxBrowserCapabilities(props, ctx);
+    react.useEffect(() => { if (!available) bridge?.fail('browser-hooks-unavailable'); }, [available, bridge]);
+    if (bridge?.enabled === false || !available) return h(OriginalBrowser, props);
+    return h(AdaptiveBoundary, { nativeProps: props }, h(SessionInboxBrowser, props));
+  };
 }
