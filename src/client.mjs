@@ -8,14 +8,23 @@ function createInboxBrowser(OriginalBrowser, ctx) {
   }
 }
 
-function inboxBrowserCapabilities(props, ctx) {
+function inboxMissingCapabilities(props, ctx) {
   const required = ['useSessions', 'useSessionStatus', 'useWorkspaces', 'usePanelInfo',
     'open', 't', 'renderSlot', 'requestSessionRename', 'unarchiveSession'];
-  if (props.useContextMenu != null) required.push('useContextMenu', 'useContextMenuTarget', 'useSessionAccess', 'openSessionMenu');
+  // openSessionMenu is deliberately absent: 0.2.2-rc.2 routes the row menu
+  // through useContextMenu().getTriggerProps instead, and either path works.
+  if (props.useContextMenu != null) required.push('useContextMenu', 'useContextMenuTarget', 'useSessionAccess');
   if (props.useWorkspaceShortcuts != null) required.push('useWorkspaceShortcuts', 'expandSidebar');
   if (props.useSessionAccess != null) required.push('useSessionAccess');
-  return required.every(name => typeof props[name] === 'function')
-    && ['refresh', 'refreshProjections'].every(name => typeof ctx.sessions?.[name] === 'function');
+  const missing = required.filter(name => typeof props[name] !== 'function');
+  for (const name of ['refresh', 'refreshProjections']) {
+    if (typeof ctx.sessions?.[name] !== 'function') missing.push(`sessions.${name}`);
+  }
+  return missing;
+}
+
+function inboxBrowserCapabilities(props, ctx) {
+  return inboxMissingCapabilities(props, ctx).length === 0;
 }
 
 function inboxRunNative(action, onError) {
@@ -122,13 +131,23 @@ function inboxCreateBrowser(OriginalBrowser, ctx) {
     const { getTriggerProps } = native.useContextMenu();
     const menuOpen = native.useContextMenuTarget(target => target?.kind === 'session' && target.value.sessionId === row.id);
     const renamable = native.useSessionAccess(row.id, 'session/rename');
-    return renderInboxRow(props, { menuOpen, renamable,
-      trigger: getTriggerProps(row.blank ? undefined : { kind: 'session', value: { sessionId: row.id, displayTitle: row.title } }),
+    const trigger = getTriggerProps(row.blank ? undefined : { kind: 'session', value: { sessionId: row.id, displayTitle: row.title } });
+    return renderInboxRow(props, { menuOpen, renamable, trigger,
       wrap: button => button,
       open: event => {
-        event.currentTarget.focus({ preventScroll: true });
-        const rect = event.currentTarget.getBoundingClientRect();
-        inboxRunNative(() => native.openSessionMenu(row.id, row.title, { x: rect.left, y: rect.bottom }, 'toggle'));
+        const button = event.currentTarget;
+        button.focus({ preventScroll: true });
+        const rect = button.getBoundingClientRect();
+        // rc.1 exposes openSessionMenu; rc.2 opens the same native menu by
+        // handing a context-menu request to the trigger the row already carries.
+        if (typeof native.openSessionMenu === 'function') {
+          inboxRunNative(() => native.openSessionMenu(row.id, row.title, { x: rect.left, y: rect.bottom }, 'toggle'));
+          return;
+        }
+        const owner = button.closest?.('[data-inbox-session-id]');
+        if (!owner || typeof trigger.onContextMenu !== 'function') return;
+        trigger.onContextMenu({ defaultPrevented: false, clientX: rect.left, clientY: rect.bottom,
+          currentTarget: owner, preventDefault() { this.defaultPrevented = true; }, stopPropagation() {} });
       } });
   }
 
@@ -579,7 +598,7 @@ function inboxCreateBrowser(OriginalBrowser, ctx) {
   class AdaptiveBoundary extends react.Component {
     state = { failed: false };
     static getDerivedStateFromError() { return { failed: true }; }
-    componentDidCatch() { window.__DSH_SESSION_INBOX_BRIDGE__?.fail('browser-contract-changed'); }
+    componentDidCatch(error) { window.__DSH_SESSION_INBOX_BRIDGE__?.fail(`browser-contract-changed: ${error?.message ?? error}`); }
     render() { return this.state.failed ? h(OriginalBrowser, this.props.nativeProps) : this.props.children; }
   }
   return function AdaptiveBrowser(props) {
@@ -590,8 +609,12 @@ function inboxCreateBrowser(OriginalBrowser, ctx) {
       refresh(value => value + 1); // Account for activation between render and subscription.
       return unsubscribe;
     }, [bridge]);
-    const available = inboxBrowserCapabilities(props, ctx);
-    react.useEffect(() => { if (!available) bridge?.fail('browser-hooks-unavailable'); }, [available, bridge]);
+    const missing = inboxMissingCapabilities(props, ctx);
+    const missingKey = missing.join(',');
+    react.useEffect(() => {
+      if (missingKey) bridge?.fail(`browser-hooks-unavailable: ${missingKey}`);
+    }, [missingKey, bridge]);
+    const available = missing.length === 0;
     if (bridge?.enabled === false || !available) return h(OriginalBrowser, props);
     return h(AdaptiveBoundary, { nativeProps: props }, h(SessionInboxBrowser, props));
   };

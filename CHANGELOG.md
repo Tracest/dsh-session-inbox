@@ -14,7 +14,20 @@
   literals, as a regression fixture (17 upstream pairs).
 - Report `native-structure-changed` when the loaded factory no longer matches the
   inspected shape, instead of the previous byte-level `native-factory-changed`.
-- Pass 89 JavaScript and 6 installer tests.
+- Open the row menu through the context-menu trigger when a release routes it there
+  (0.2.2-rc.2 dropped `openSessionMenu`), instead of giving up on the workbench.
+- Name the missing hooks in the capability failure (`browser-hooks-unavailable: …`)
+  and carry the render error into `browser-contract-changed: …`.
+- Rebuild the compact shell for DSH 0.2.2's nested sidebar: the panel seats stay on
+  one row and the region takes the leftover height, so the Working and Settled
+  shelves stay pinned below the inbox. Older layouts keep the original compact grid;
+  the grid is only applied where the region is still a direct child of the shell root,
+  which is what collapsed the scroll area to zero height on 0.2.2-rc.2.
+- Let the fallback notice name its reason and dismiss on click instead of vanishing
+  after eight seconds.
+- Write host diagnostics to the temp probe log only when `DSH_SESSION_INBOX_DEBUG`
+  is set; a normal boot no longer touches the filesystem.
+- Pass 91 JavaScript and 6 installer tests.
 
 ## 0.5.0 — 2026-11-06
 

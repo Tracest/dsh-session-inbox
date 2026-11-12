@@ -26,7 +26,9 @@ test('conditional native actions and service capabilities are checked before enh
   }
   const unified = { ...props, ...Object.fromEntries(['useContextMenu', 'useContextMenuTarget', 'useSessionAccess', 'openSessionMenu'].map(key => [key, () => {}])) };
   assert.equal(context.inboxBrowserCapabilities(unified, ctx), true);
-  assert.equal(context.inboxBrowserCapabilities({ ...unified, openSessionMenu: undefined }, ctx), false);
+  assert.equal(context.inboxBrowserCapabilities({ ...unified, openSessionMenu: undefined }, ctx), true,
+    'rc.2 opens the row menu through the context-menu trigger instead');
+  assert.equal(context.inboxBrowserCapabilities({ ...unified, useContextMenuTarget: undefined }, ctx), false);
   assert.equal(context.inboxBrowserCapabilities(props, { sessions: { refresh() {} } }), false);
 });
 test('sync action errors and rejected async actions request native fallback without escaping', async () => {
@@ -44,7 +46,7 @@ function nodes(tree) {
   return !tree || typeof tree !== 'object' ? [] : [tree, ...tree.children.flatMap(nodes), ...nodes(tree.props.anchor)];
 }
 
-function rowFixture({ blank = false, renamable = true, active = null, legacy = false, accessHook = true } = {}) {
+function rowFixture({ blank = false, renamable = true, active = null, legacy = false, accessHook = true, triggerOpens = false } = {}) {
   const calls = [];
   const react = { createElement: h, Component: class {}, Fragment: 'Fragment',
     useState: value => [typeof value === 'function' ? value() : value, next => calls.push({ kind: 'state', next })],
@@ -68,7 +70,10 @@ function rowFixture({ blank = false, renamable = true, active = null, legacy = f
     useWorkspaceShortcuts: select => select({ searchRequest: 0 }),
     useContextMenu: () => ({ getTriggerProps(target) {
       calls.push({ kind: 'trigger', target });
-      return target ? { tabIndex: 0, onContextMenu: 'native-context', onKeyDown: 'native-keyboard' } : {};
+      if (!target) return {};
+      if (triggerOpens) return { tabIndex: 0, onKeyDown: 'native-keyboard',
+        onContextMenu: event => calls.push({ kind: 'native-open', event }) };
+      return { tabIndex: 0, onContextMenu: 'native-context', onKeyDown: 'native-keyboard' };
     } }),
     useContextMenuTarget: select => select(active),
     useSessionAccess: (id, action) => { calls.push({ kind: 'access', id, action }); return renamable; },
@@ -77,6 +82,7 @@ function rowFixture({ blank = false, renamable = true, active = null, legacy = f
     renderSlot: (name, ...args) => { calls.push({ kind: 'slot', name, args }); return null; },
     t: key => key,
   };
+  if (triggerOpens) delete props.openSessionMenu;
   if (legacy) {
     delete props.useContextMenu;
     delete props.useContextMenuTarget;
@@ -116,6 +122,22 @@ test('ellipsis toggles the full native menu at the focused button, including bui
   assert.equal(focused, true);
   const args = fixture.calls.find(call => call.kind === 'menu').args;
   assert.deepEqual(JSON.parse(JSON.stringify(args)), ['chat', 'Session', { x: 21, y: 87 }, 'toggle']);
+});
+
+test('the row menu opens through the rc.2 trigger when openSessionMenu is gone', () => {
+  const fixture = rowFixture({ triggerOpens: true });
+  const owner = { id: 'row-element' };
+  fixture.menu.props.onClick({ currentTarget: {
+    focus() {},
+    closest: selector => selector === '[data-inbox-session-id]' ? owner : null,
+    getBoundingClientRect: () => ({ left: 11, bottom: 42 }),
+  } });
+  const opened = fixture.calls.find(call => call.kind === 'native-open');
+  assert.ok(opened, 'the native context-menu trigger must receive the request');
+  assert.equal(opened.event.currentTarget, owner);
+  assert.equal(opened.event.clientX, 11);
+  assert.equal(opened.event.clientY, 42);
+  assert.ok(!fixture.calls.some(call => call.kind === 'menu'), 'no removed 0.2.2-rc.1 opener is required');
 });
 
 test('blank rows do not expose a session menu, and rename honors current native access', () => {

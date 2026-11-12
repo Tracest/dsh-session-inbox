@@ -99,6 +99,34 @@ for (const [platform, css, prefix] of [['0.2.2-rc.1 npm', currentSidebarCss, 'hH
   });
 }
 
+test('the compact grid keeps the direct-child guard and the panel seats stay one row', () => {
+  // 0.2.2-rc.2 nests the region inside its own scroll area. Matching only the region there
+  // collapsed the scroll row to zero height and hid the whole sidebar, so the grid must stay
+  // behind the direct-child guard while the panel seats still collapse into a single row.
+  for (const prefix of ['hHd-Xa', 'wtg9ga']) {
+    const fixture = shellFixture(prefix === 'hHd-Xa' ? currentSidebarCss : windowsSidebarCss);
+    const dispose = fixture.start();
+    const actual = fixture.styles.find(style => style.dataset.inboxShell === 'dsh-session-inbox').textContent;
+    assert.ok(actual.includes(`.${prefix}_root:not(.${prefix}_collapsed):has(> .${prefix}_regionArea)`),
+      'the compact grid lost its direct-child guard');
+    for (const rule of actual.split('}')) {
+      if (!rule.includes('grid-template-areas:')) continue;
+      assert.ok(rule.includes(`:has(> .${prefix}_regionArea)`), 'a grid layout rule escaped the guarded scope');
+    }
+    assert.ok(actual.includes(':is(:has(> .'), 'the panel row scope lost its root guard');
+    const panelRule = actual.split('}').find(rule => rule.includes(`.${prefix}_panelList{grid-area:nav;display:grid;`));
+    assert.ok(panelRule, 'the panel seats are not laid out in one row');
+    assert.ok(!panelRule.includes(`:has(> .${prefix}_regionArea)`),
+      'the panel row is still tied to the grid scope, so nested shells keep the stacked list');
+    assert.ok(actual.includes(`.${prefix}_panelRow{width:100%;`), 'the panel seats kept the native stacked row');
+    assert.ok(actual.includes('scrollArea{display:flex;flex-direction:column;'),
+      'the nested scroll area no longer lays out as a column');
+    assert.ok(actual.includes('regionArea{flex:1;min-height:0}'),
+      'the nested region no longer takes the leftover height, so the shelves float');
+    dispose();
+  }
+});
+
 test('missing and ambiguous native classes fail before replacing the current shell', () => {
   for (const invalidCss of [windowsSidebarCss.replaceAll('.wtg9ga_panelList', '.unrelated'),
     windowsSidebarCss + '\n.another_root{}']) {

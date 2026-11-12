@@ -58,6 +58,13 @@
 .dsi-shell-compact .dsi-shell-root:has(.dsi-shell-top-strip) .dsi-shell-new-session-label{display:none}
 .dsi-shell-compact .dsi-shell-new-session:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .dsi-shell-compact .dsi-shell-region-area{grid-area:region;margin:0 -12px;min-height:0;padding:0}
+/* Nested shells keep the native flex order, so the shared compact rules above already
+   apply; these three only cancel what the old grid layout added for its own root. */
+.dsi-shell-fill .dsi-shell-scroll-area{display:flex;flex-direction:column;gap:2px;padding:8px 6px 0 4px}
+.dsi-shell-fill .dsi-shell-region-area{flex:1;min-height:0}
+.dsi-shell-nested .dsi-shell-panel-list{margin:0}
+.dsi-shell-nested .dsi-shell-region-area{margin:0}
+.dsi-shell-nested .dsi-shell-new-session{align-self:stretch}
 .dsi-shell-compact .dsi-shell-panel-list{grid-area:nav;display:grid;grid-template-columns:repeat(auto-fit,minmax(40px,1fr));gap:2px;margin:0 -4px;padding:0 0 7px;border-top:0;border-bottom:1px solid color-mix(in srgb,currentColor 9%,transparent)}
 .dsi-shell-compact .dsi-shell-panel-row{width:100%;min-height:43px;margin:0;padding:5px 2px;flex-direction:column;justify-content:center;gap:3px;border-radius:8px;line-height:14px;font-size:10px;color:var(--dsw-alias-label-secondary)}
 .dsi-shell-compact .dsi-shell-panel-row[aria-current=page]{color:var(--dsw-alias-label-primary)}

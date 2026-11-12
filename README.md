@@ -7,19 +7,23 @@ by project when needed, review completed or actionable chats in an **untitled
 upper inbox**, keep unattended runs in a bottom **Working** shelf, and manually
 move finished work into **Settled**. Restore the original DSH layout with one click.
 
-The current workbench labels are Chinese. Version `0.5.0` retains the rounded
+The current workbench labels are Chinese. Version `0.6.0` retains the rounded
 monochrome icons and bottom floating Undo notice: five seconds, paused while
-hovered or focused, without shifting the list.
+hovered or focused, without shifting the list. It also rebuilds the compact shell
+for DSH 0.2.2's nested sidebar, so the panel seats stay on one row and the Working
+and Settled shelves stay pinned below the inbox instead of floating mid-list.
 
 ## Compatibility policy
 
-Version 0.5.0 admits DSH **0.1.7-rc.1 up to, but not including, 1.0.0 prereleases**,
+Version 0.6.0 admits DSH **0.1.7-rc.1 up to, but not including, 1.0.0 prereleases**,
 excluding the known-broken **0.2.2-alpha.2**. DSH evaluates prereleases with
 `includePrerelease: true`. Build metadata does not change this policy.
 
 The original workspace plugin stays enabled. The host reads its current native
 module through `clientModules.clientPath` and prepares an in-memory enhancement;
-the browser applies it only if that exact factory is still being loaded. Native
+the browser applies it only if the loaded factory still matches the inspected
+structure, with whitespace, comments and quote style ignored, so a reformatted or
+minified release keeps working while a real shape change does not. Native
 services, menus, dependencies and CSS remain owned by the current DSH release.
 Changed hooks, missing capabilities, rendering errors and plugin disposal retain
 or restore the current native session list, with a brief fallback notice when needed.
@@ -31,9 +35,10 @@ require an allowlist update. Incompatible changes may temporarily remove the
 workbench enhancement while leaving native DSH usable. The 1.0 boundary requires
 a new assessment.
 
-Sixteen published native workspace/sidebar pairs remain regression fixtures:
+Seventeen published native workspace/sidebar pairs remain regression fixtures:
 0.1.7-rc.1/rc.2; 0.2.0-rc.1/rc.2; 0.2.1-alpha.1–alpha.5 and rc.1–rc.5;
-0.2.2-alpha.3/rc.1. They are not shipped as runtime substitutes. Browser regression
+0.2.2-alpha.3/rc.1/rc.2 (rc.2 ships minified on one line). They are not shipped as
+runtime substitutes. Browser regression
 uses official 0.1.7-rc.1, 0.2.1-rc.5 and 0.2.2-rc.1 Web hosts in isolated profiles,
 including native-factory-change and lifecycle fallback checks. Empty fixture
 sessions are presented as nonblank only in the browser; no model API calls.
@@ -41,8 +46,11 @@ Synthetic future version labels test admission, not an unreleased DSH runtime.
 Other platforms, live model turns and arbitrary third-party combinations need
 separate acceptance.
 
-Release 0.5.0 passed 89 JavaScript tests, 6 installer tests and 15 isolated Windows
-Web checks on each of the three runtimes above (45 browser checks total).
+Release 0.6.0 passed 91 JavaScript tests and 6 installer tests; the 0.5.0 browser
+matrix (15 isolated Windows Web checks on each of the three runtimes above) also
+covers the enhancement and fallback paths. 0.6.0 additionally ran isolated Chromium
+checks against 0.2.2-rc.2 with a real profile, which is where the nested sidebar
+layout is exercised.
 
 DSH 0.2.2-alpha.2 remains excluded after native first-run acknowledgement and
 session creation failures reproduced without the plugin.
