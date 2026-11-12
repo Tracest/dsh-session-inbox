@@ -16,8 +16,8 @@
         "zh": "DSH 会话工作台"
       },
       "description": {
-        "en": "Compact session workbench with rounded icons, floating Undo, native menus, search and metadata backups. Version 0.5.0 enhances the current native UI and falls back on detected incompatibility. Admits DSH 0.1.7-rc.1 through pre-1.0 releases except 0.2.2-alpha.2; future releases are not claimed as tested. 16 native regression fixtures, 91 code/installer tests and 45 isolated Windows Web checks across 0.1.7-rc.1, 0.2.1-rc.5 and 0.2.2-rc.1. Chinese UI; no model API calls in this matrix.",
-        "zh": "圆角图标、底部浮动撤销、原生菜单、搜索和整理备份。0.5.0 增强当前宿主原生界面，检测到不兼容时回退原生列表。准入范围为 DSH 0.1.7-rc.1 起至 1.0 预发布之前，排除 0.2.2-alpha.2；不将未来版本标为已实测。16 组原生回归样本、91 项代码和安装器测试，以及 0.1.7-rc.1、0.2.1-rc.5、0.2.2-rc.1 共 45 项 Windows 隔离 Web 检查。中文界面，矩阵未调用模型 API。"
+        "en": "Compact session workbench with rounded icons, floating Undo, native menus, search and metadata backups. Version 0.6.0 matches native hooks structurally, so minified or reformatted releases keep the workbench, and rebuilds the compact shell for DSH 0.2.2's nested sidebar: panel seats stay on one row and the Working/Settled shelves stay pinned below the inbox. Falls back to the native list on any contract change. Admits DSH 0.1.7-rc.1 through pre-1.0 releases except 0.2.2-alpha.2; future releases are not claimed as tested. 17 native regression fixtures, 91 JavaScript and 6 installer tests, plus isolated Chromium checks against 0.2.2-rc.2. Chinese UI; no model API calls in this matrix.",
+        "zh": "圆角图标、底部浮动撤销、原生菜单、搜索和整理备份。0.6.0 按结构比对原生接入点，压缩或重排的版本不会失效；并按 DSH 0.2.2 的嵌套侧栏重建紧凑外壳：面板项保持一行，工作中与已整理固定贴在收件箱下方。检测到不兼容时回退原生列表。准入范围为 DSH 0.1.7-rc.1 起至 1.0 预发布之前，排除 0.2.2-alpha.2；不将未来版本标为已实测。17 组原生回归样本、91 项 JavaScript 与 6 项安装器测试，以及针对 0.2.2-rc.2 的隔离 Chromium 检查。中文界面，矩阵未调用模型 API。"
       },
       "author": "Tracest",
       "homepage": "https://github.com/Tracest/dsh-session-inbox",
@@ -26,6 +26,18 @@
       },
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMTgwIDE4MCIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxODAiIHJ4PSI0MCIgZmlsbD0iIzE3MjAzMyIvPgogIDxyZWN0IHg9IjMyIiB5PSIzMiIgd2lkdGg9IjExNiIgaGVpZ2h0PSIxMTYiIHJ4PSIxNyIgc3Ryb2tlPSIjRDlFNEZBIiBzdHJva2Utd2lkdGg9IjgiLz4KICA8cGF0aCBkPSJNNzAgMzZWMTQ0IiBzdHJva2U9IiNEOUU0RkEiIHN0cm9rZS13aWR0aD0iNyIvPgogIDxwYXRoIGQ9Ik00NSA1N0g1N000NSA3OEg1N000NSA5OUg1NyIgc3Ryb2tlPSIjQTVCRkYyIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik04OSA5M0wxMDQgMTA4TDEzMCA3NiIgc3Ryb2tlPSIjODZFM0MxIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K",
       "versions": [
+        {
+          "version": "0.6.0",
+          "publishTimestamp": 1794487817,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Tracest/dsh-session-inbox",
+            "commit": "ba33bfb041fd03b7b2f4d3da2540692191bc83f3"
+          },
+          "engines": {
+            "dsh": ">=0.1.7-rc.1 <0.2.2-alpha.2 || >0.2.2-alpha.2 <1.0.0-0"
+          }
+        },
         {
           "version": "0.5.0",
           "publishTimestamp": 1793943622,
