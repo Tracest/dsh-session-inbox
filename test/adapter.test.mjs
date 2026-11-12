@@ -31,18 +31,48 @@ for (const version of versions) test(`${version}: current native factory and all
     return {};
   });
   assert.equal(typeof exports.apply, 'function');
-  assert.equal(exports.inject.includes('contextMenus'), upstream.includes('"contextMenus"'));
-  const expected = [...upstream.matchAll(/^\s*const css(?:\$\d+)? = ("(?:\\.|[^"\\])*");$/gm)].map(match => JSON.parse(match[1]));
-  const ids = [...upstream.matchAll(/^\s*const tagId(?:\$\d+)? = ("(?:\\.|[^"\\])*");$/gm)].map(match => JSON.parse(match[1]));
+  assert.equal(exports.inject.includes('contextMenus'), /["'`]contextMenus["'`]/.test(upstream));
+  // 0.2.2-rc.2 is minified: the same literals are template literals on one line.
+  const literals = kind => [...upstream.matchAll(new RegExp(`const ${kind}(?:\\$\\d+)?\\s*=\\s*("(?:\\\\.|[^"\\\\])*"|\`(?:\\\\.|[^\`\\\\])*\`)`, 'g'))]
+    .map(match => vm.runInNewContext(match[1]));
+  const expected = literals('css');
+  const ids = literals('tagId');
   assert.deepEqual(styles.map(style => style.textContent), expected);
   assert.deepEqual(styles.map(style => style.dataset.pluginCss), ids);
+});
+
+test('a release that only reformats the native module still adapts', () => {
+  const minified = read('../vendor/workspace-client-0.2.2-rc.2.js');
+  // Same structure, different printing: quote style and whitespace must not matter.
+  const requoted = minified.replace('ctx.get(`workspaces`)', "ctx.get('workspaces')");
+  for (const source of [minified, requoted]) {
+    const result = compileAdapter(source, template);
+    assert.equal(result.mode, 'adaptive');
+  }
+});
+
+test('the bridge gate accepts reprinting and rejects a real structure change', () => {
+  const original = read('../vendor/workspace-client-0.2.2-rc.2.js');
+  const reprint = source => source.replace('ctx.get(`workspaces`)', 'ctx.get( "workspaces" )');
+  const registered = source => {
+    let registration;
+    const sandbox = vm.createContext({ window: { __ModuleLoader__: { load(value) { registration = value; } } },
+      console, document: { querySelector: () => null, createElement: () => ({ dataset: {} }), head: { appendChild() {} } } });
+    vm.runInContext(compileAdapter(source, template).script, sandbox);
+    vm.runInContext(source, sandbox);
+    return { registration, bridge: sandbox.window.__DSH_SESSION_INBOX_BRIDGE__ };
+  };
+  const decorated = registered(reprint(original));
+  assert.equal(decorated.bridge.reason, undefined);
+  assert.notEqual(decorated.registration.factory.toString(), original.slice(original.indexOf('factory:')));
 });
 
 test('changed or ambiguous view hooks keep the native module unmodified', () => {
   for (const source of [
     latest.replace('}, WorkspaceBrowser));', '}, ReplacementBrowser));'),
     latest.replace('const workspaces = ctx.get("workspaces");', 'const workspaces = ctx.workspaces;'),
-    latest.replace('exports.apply = apply;', '// }, WorkspaceBrowser));\nexports.apply = apply;'),
+    latest.replace('const workspaces = ctx.get("workspaces");',
+      'const workspaces = ctx.get("workspaces");\n\t\t{ const workspaces = ctx.get("workspaces"); }'),
     latest.replace('function SessionHoverContent(', 'function DifferentHover('),
   ]) {
     const result = compileAdapter(source, template);
@@ -78,14 +108,14 @@ test('raw native HTML parser hazards retain native UI without rewriting string v
 
 function bridgeFixture({ pending = false, broken = false } = {}) {
   const received = [];
-  const original = () => 'native';
+  const original = () => { return 'native'; };
   const adapted = () => { if (broken) throw Error('missing optional interface'); return 'enhanced'; };
   const native = { id: WORKSPACE_MODULE, factory: original };
   const loader = { pendingQueue: pending ? [native] : [], load(value) { received.push(value); } };
   const initialLoad = loader.load;
   const sandbox = vm.createContext({ window: { __ModuleLoader__: loader }, console: { warn() {} } });
   vm.runInContext(read('../src/bridge.mjs'), sandbox);
-  sandbox.inboxInstallBridge(WORKSPACE_MODULE, original.toString(), adapted, {});
+  sandbox.inboxInstallBridge(WORKSPACE_MODULE, sandbox.inboxFactoryFingerprint(original.toString()), adapted, {});
   return { received, original, adapted, native, loader, initialLoad, bridge: sandbox.window.__DSH_SESSION_INBOX_BRIDGE__ };
 }
 
@@ -113,10 +143,10 @@ test('bridge covers parser-preloaded native modules and contains factory failure
 test('a changed native artifact is never replaced with stale compiled code', () => {
   const f = bridgeFixture();
   f.bridge.activate();
-  const changed = { id: WORKSPACE_MODULE, factory: () => 'new native' };
+  const changed = { id: WORKSPACE_MODULE, factory: () => { return 'new native'; } };
   f.loader.load(changed);
   assert.equal(f.received[0], changed);
-  assert.equal(f.bridge.reason, 'native-factory-changed');
+  assert.equal(f.bridge.reason, 'native-structure-changed');
 });
 
 test('a broken observer cannot interrupt native fallback or unload', () => {

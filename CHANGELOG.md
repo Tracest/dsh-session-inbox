@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.0 — 2026-11-12
+
+- Match native hooks by structure instead of by exact bytes. Canonical anchors strip
+  whitespace and comments and treat every quote style alike, then map each edit back
+  to the original text, so untouched bytes stay identical.
+- Replace the byte-equal factory check with a structural fingerprint of the factory
+  body. A release that only reformats or minifies the native module now keeps the
+  workbench instead of silently falling back to the native list.
+- Check the native factory's shape before decorating and validate the adapted
+  factory syntax before shipping it; a changed hook still degrades to native.
+- Add 0.2.2-rc.2, whose workspace module ships minified on one line with template
+  literals, as a regression fixture (17 upstream pairs).
+- Report `native-structure-changed` when the loaded factory no longer matches the
+  inspected shape, instead of the previous byte-level `native-factory-changed`.
+- Pass 89 JavaScript and 6 installer tests.
+
 ## 0.5.0 — 2026-11-06
 
 - Replace exact-release runtime copies with an enhancement of the currently loaded

@@ -1,4 +1,5 @@
-/** Ship one adapter template; vendored releases are regression fixtures only. */
+/** Ship one adapter template; vendored releases are regression fixtures only.
+ * Anchors are structural, so a reformatted or minified release still compiles. */
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import vm from 'node:vm';
@@ -35,7 +36,7 @@ for (const [name, source] of [['client.js', client], ['index.js', read('./src/ho
 }
 fs.writeFileSync(new URL('./lib/runtime-template.json', import.meta.url), JSON.stringify(template) + '\n');
 fs.writeFileSync(new URL('./lib/build-info.json', import.meta.url), JSON.stringify({
-  version: manifest.version, strategy: 'current-native-factory', engineRange: compatibility.engineRange,
+  version: manifest.version, strategy: 'structural-native-factory', engineRange: compatibility.engineRange,
   regressionVersions: compatibility.dshVersions, upstreamSha256,
 }, null, 2) + '\n');
 console.log(`Built ${manifest.version}: one adaptive template, ${compatibility.dshVersions.length} native regression fixtures.`);

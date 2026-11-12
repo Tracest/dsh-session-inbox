@@ -41,7 +41,7 @@ Synthetic future version labels test admission, not an unreleased DSH runtime.
 Other platforms, live model turns and arbitrary third-party combinations need
 separate acceptance.
 
-Release 0.5.0 passed 85 JavaScript tests, 6 installer tests and 15 isolated Windows
+Release 0.5.0 passed 89 JavaScript tests, 6 installer tests and 15 isolated Windows
 Web checks on each of the three runtimes above (45 browser checks total).
 
 DSH 0.2.2-alpha.2 remains excluded after native first-run acknowledgement and

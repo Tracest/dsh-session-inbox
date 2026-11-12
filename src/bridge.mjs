@@ -1,5 +1,63 @@
-/** Decorate only the exact native factory inspected by this Host. */
-function inboxInstallBridge(owner, expectedFactory, adaptedFactory, details) {
+/** Canonical form of native source: quotes, whitespace and comments carry no
+ * meaning, so identity is decided on what the code does, not how it is printed.
+ * 0.2.2-rc.2 ships this module minified on one line with template literals where
+ * earlier releases use double quotes; both must produce the same canonical text. */
+function inboxNormalize(source) {
+  const out = [];
+  let i = 0;
+  const n = source.length;
+  while (i < n) {
+    const c = source[i];
+    if (c === '/' && source[i + 1] === '/') { while (i < n && source[i] !== '\n') i++; continue; }
+    if (c === '/' && source[i + 1] === '*') {
+      i += 2;
+      while (i < n && !(source[i] === '*' && source[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') {
+      const quote = c;
+      let j = i + 1;
+      let depth = 0;
+      while (j < n) {
+        const d = source[j];
+        if (d === '\\') { j += 2; continue; }
+        if (quote === '`' && d === '$' && source[j + 1] === '{') { depth++; out.push('{'); j += 2; continue; }
+        if (quote === '`' && d === '}' && depth > 0) { depth--; out.push('}'); j++; continue; }
+        if (d === quote && depth === 0) break;
+        j++;
+      }
+      out.push('"');
+      for (let k = i + 1; k < j; k++) out.push(source[k]);
+      out.push('"');
+      i = j + 1;
+      continue;
+    }
+    if (/\s/.test(c)) { i++; continue; }
+    out.push(c);
+    i++;
+  }
+  return out.join('');
+}
+
+function inboxFingerprint(text) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return 'n1-' + h.toString(16) + '-' + text.length;
+}
+
+/** Identity of a factory body. Two releases that keep the same body keep the
+ * same fingerprint even if a minifier rewrote every quote and newline. */
+function inboxFactoryFingerprint(factoryText) {
+  const text = inboxNormalize(factoryText);
+  const open = text.indexOf('{');
+  const close = text.lastIndexOf('}');
+  if (open < 0 || close <= open) throw new Error('native-factory-unbalanced');
+  return inboxFingerprint(text.slice(open, close + 1));
+}
+
+/** Decorate only a native factory whose shape matches the inspected one. */
+function inboxInstallBridge(owner, expectedFingerprint, adaptedFactory, details) {
   const loader = window.__ModuleLoader__;
   const listeners = new Set();
   let active = 0;
@@ -46,9 +104,15 @@ function inboxInstallBridge(owner, expectedFactory, adaptedFactory, details) {
   const decorated = new WeakSet();
   function decorate(registration) {
     if (suspended || fault || registration?.id !== owner || decorated.has(registration)) return registration;
-    if (typeof registration.factory !== 'function'
-      || registration.factory.toString().replace(/\r\n/g, '\n') !== expectedFactory) {
+    if (typeof registration.factory !== 'function') {
       state.fail('native-factory-changed');
+      return registration;
+    }
+    let actual;
+    try { actual = inboxFactoryFingerprint(registration.factory.toString()); }
+    catch (error) { state.fail('native-factory-changed'); return registration; }
+    if (actual !== expectedFingerprint) {
+      state.fail('native-structure-changed');
       return registration;
     }
     const original = registration.factory;
